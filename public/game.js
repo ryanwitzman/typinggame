@@ -17,8 +17,8 @@ document.getElementById('three-container').appendChild(renderer.domElement);
 camera.position.set(0, 5, 10);
 camera.lookAt(0, 0, 0);
 
-// Create a racing track
-const trackGeometry = new THREE.RingGeometry(8, 10, 32);
+// Create a straight racing track
+const trackGeometry = new THREE.PlaneGeometry(100, 10);
 const trackMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
 const track = new THREE.Mesh(trackGeometry, trackMaterial);
 track.rotation.x = -Math.PI / 2;
@@ -29,27 +29,58 @@ const fontLoader = new THREE.FontLoader();
 fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
     const textGeometry = new THREE.TextGeometry('Type to race!', {
         font: font,
-        size: 0.5,
-        height: 0.1,
+        size: 2,
+        height: 0.2,
     });
     const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(-2, 2, 0);
+    textMesh.position.set(-10, 5, -5);
     scene.add(textMesh);
 });
 
 function createCar(color) {
-    const carGeometry = new THREE.BoxGeometry(0.5, 0.3, 1);
-    const carMaterial = new THREE.MeshBasicMaterial({ color: color });
-    return new THREE.Mesh(carGeometry, carMaterial);
+    const carShape = new THREE.Shape();
+    carShape.moveTo(0, 0);
+    carShape.lineTo(0, 0.4);
+    carShape.lineTo(0.2, 0.6);
+    carShape.lineTo(0.8, 0.6);
+    carShape.lineTo(1, 0.4);
+    carShape.lineTo(1, 0);
+    carShape.lineTo(0, 0);
+
+    const extrudeSettings = {
+        steps: 2,
+        depth: 0.5,
+        bevelEnabled: true,
+        bevelThickness: 0.1,
+        bevelSize: 0.1,
+        bevelSegments: 1
+    };
+
+    const carGeometry = new THREE.ExtrudeGeometry(carShape, extrudeSettings);
+    const carMaterial = new THREE.MeshPhongMaterial({ color: color });
+    const car = new THREE.Mesh(carGeometry, carMaterial);
+    car.scale.set(2, 2, 2);
+    return car;
 }
 
 function updateCarPosition(car, progress) {
-    const angle = (progress / 100) * Math.PI * 2;
-    car.position.x = 9 * Math.cos(angle);
-    car.position.z = 9 * Math.sin(angle);
-    car.rotation.y = angle + Math.PI / 2;
+    car.position.x = (progress / 100) * 90 - 45;
+    car.position.y = 0.5;
+    car.rotation.y = -Math.PI / 2;
 }
+
+// Add lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(0, 10, 10);
+scene.add(directionalLight);
+
+// Update camera position
+camera.position.set(0, 20, 30);
+camera.lookAt(0, 0, 0);
 
 function animate() {
     requestAnimationFrame(animate);
@@ -148,13 +179,13 @@ function updateWordDisplay() {
     fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
         const textGeometry = new THREE.TextGeometry(currentWord, {
             font: font,
-            size: 0.5,
-            height: 0.1,
+            size: 2,
+            height: 0.2,
         });
         const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
         textMesh.name = 'currentWord';
-        textMesh.position.set(-2, 3, 0);
+        textMesh.position.set(-10, 5, -5);
         scene.add(textMesh);
     });
 }
