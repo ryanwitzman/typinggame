@@ -19,6 +19,11 @@ export function initGame(gameState, socket) {
     players.forEach((player, id) => createOrUpdateCar(id));
 
     setupEventListeners(socket);
+
+    // Hide menu and lobby containers, show game container
+    document.getElementById('menu-container').style.display = 'none';
+    document.getElementById('lobby-container').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
 }
 
 function setupEventListeners(socket) {

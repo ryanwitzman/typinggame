@@ -8,9 +8,11 @@ export function showLobby(id) {
     lobbyId = id;
     const menuContainer = document.getElementById('menu-container');
     const lobbyContainer = document.getElementById('lobby-container');
+    const gameContainer = document.getElementById('game-container');
     
     menuContainer.style.display = 'none';
     lobbyContainer.style.display = 'block';
+    gameContainer.style.display = 'none';
     
     initLobbyScene();
     updateLobbyDisplay();
