@@ -24,19 +24,7 @@ const track = new THREE.Mesh(trackGeometry, trackMaterial);
 track.rotation.x = -Math.PI / 2;
 scene.add(track);
 
-// Create text
-const fontLoader = new THREE.FontLoader();
-fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-    const textGeometry = new THREE.TextGeometry('Type to race!', {
-        font: font,
-        size: 2,
-        height: 0.2,
-    });
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(-10, 5, -5);
-    scene.add(textMesh);
-});
+// Text will be created dynamically for each word
 
 function createCar(color) {
     const carGroup = new THREE.Group();
@@ -210,13 +198,18 @@ function updateWordDisplay() {
     fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
         const textGeometry = new THREE.TextGeometry(currentWord, {
             font: font,
-            size: 2,
-            height: 0.2,
+            size: 1.5,
+            height: 0.1,
         });
         const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
         textMesh.name = 'currentWord';
-        textMesh.position.set(-10, 5, -5);
+        
+        // Center the text
+        textGeometry.computeBoundingBox();
+        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+        textMesh.position.set(-textWidth / 2, 10, -5);
+        
         scene.add(textMesh);
     });
 }
