@@ -61,24 +61,29 @@ function changeCarColor() {
 export function updatePlayerCars(players) {
     // Remove cars that are no longer in the lobby
     cars.forEach((car, id) => {
-        if (!players.includes(id)) {
+        if (!players.some(player => player.id === id)) {
             scene.remove(car);
             cars.delete(id);
         }
     });
 
     // Add or update cars for each player
-    players.forEach((playerId, index) => {
-        if (!cars.has(playerId)) {
-            const car = createCar(colors[index % colors.length]);
+    players.forEach((player, index) => {
+        if (!cars.has(player.id)) {
+            const car = createCar(player.color || colors[index % colors.length]);
             car.scale.set(0.5, 0.5, 0.5);
             scene.add(car);
-            cars.set(playerId, car);
+            cars.set(player.id, car);
         }
         
         // Position cars side by side
-        const car = cars.get(playerId);
+        const car = cars.get(player.id);
         car.position.set((index - (players.length - 1) / 2) * 2.5, 0.5, 0);
+        
+        // Update car color if it has changed
+        if (player.color) {
+            car.children[0].material.color.setStyle(player.color);
+        }
     });
 }
 

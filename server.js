@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
 
     socket.on('createLobby', () => {
         const lobbyId = Math.random().toString(36).substring(2, 8);
-        lobbies.set(lobbyId, { players: new Set(), paragraph: null });
+        lobbies.set(lobbyId, { players: new Map(), paragraph: null });
         socket.join(lobbyId);
         socket.emit('lobbyCreated', lobbyId);
     });
@@ -41,24 +41,32 @@ io.on('connection', (socket) => {
         const lobby = lobbies.get(lobbyId);
         if (lobby) {
             socket.join(lobbyId);
-            lobby.players.add(socket.id);
+            lobby.players.set(socket.id, { id: socket.id, progress: 0, color: getRandomColor() });
             socket.emit('joinedLobby', lobbyId);
-            io.to(lobbyId).emit('playerJoined', { id: socket.id, progress: 0 });
+            io.to(lobbyId).emit('updateLobby', { players: Array.from(lobby.players.values()) });
         } else {
             socket.emit('error', 'Lobby not found');
         }
     });
 
-    socket.on('startGame', async () => {
-        const lobbyId = Array.from(socket.rooms).find(room => room !== socket.id);
-        if (lobbyId && lobbies.has(lobbyId)) {
-            const lobby = lobbies.get(lobbyId);
+    socket.on('startGame', async (lobbyId) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby) {
             lobby.paragraph = await getRandomParagraph();
             const gameState = {
-                players: Array.from(lobby.players).map(id => ({ id, progress: 0 })),
+                players: Array.from(lobby.players.values()),
                 paragraph: lobby.paragraph
             };
             io.to(lobbyId).emit('gameStarted', gameState);
+        }
+    });
+
+    socket.on('changeCarColor', (lobbyId) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby && lobby.players.has(socket.id)) {
+            const player = lobby.players.get(socket.id);
+            player.color = getRandomColor();
+            io.to(lobbyId).emit('updateLobby', { players: Array.from(lobby.players.values()) });
         }
     });
 
@@ -85,3 +93,6 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+function getRandomColor() {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
