@@ -1,94 +1,132 @@
 import { THREE } from './threeImport.js';
-import { createCar } from './car.js';
+import { createCar, updateCarPosition } from './car.js';
 
 let scene, camera, renderer;
-const cars = new Map();
-const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+let car;
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+const colors = [0x1a75ff, 0xff4d4d, 0x4dff4d, 0xffff4d, 0xff4dff, 0x4dffff];
 let currentColorIndex = 0;
 
 export function initLobbyScene() {
     scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB); // Sky blue background
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('lobby-container').appendChild(renderer.domElement);
 
-    // Add lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-
-    // Add grass plane
-    const grassTexture = new THREE.TextureLoader().load('grass_texture.jpg');
-    const grassGeometry = new THREE.PlaneGeometry(20, 10);
-    const grassMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
-    const grass = new THREE.Mesh(grassGeometry, grassMaterial);
-    grass.rotation.x = -Math.PI / 2;
-    scene.add(grass);
-
-    // Set up camera
     camera.position.set(0, 5, 10);
     camera.lookAt(0, 0, 0);
 
-    // Add event listener for color change
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'c' || event.key === 'C') {
-            changeCarColor();
-        }
-    });
+    createTrack();
+    addLighting();
+    createPlayerCar();
+
+    window.addEventListener('resize', onWindowResize, false);
+    document.addEventListener('mousedown', onMouseDown, false);
+    document.addEventListener('mousemove', onMouseMove, false);
+    document.addEventListener('mouseup', onMouseUp, false);
+    document.addEventListener('keydown', onKeyDown, false);
 
     animate();
 }
 
+function createTrack() {
+    const trackGeometry = new THREE.PlaneGeometry(20, 20);
+    const trackTexture = new THREE.TextureLoader().load('road_texture.jpg');
+    trackTexture.wrapS = THREE.RepeatWrapping;
+    trackTexture.wrapT = THREE.RepeatWrapping;
+    trackTexture.repeat.set(2, 2);
+    const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
+    const track = new THREE.Mesh(trackGeometry, trackMaterial);
+    track.rotation.x = -Math.PI / 2;
+    scene.add(track);
+
+    const grassGeometry = new THREE.PlaneGeometry(100, 100);
+    const grassTexture = new THREE.TextureLoader().load('grass_texture.jpg');
+    grassTexture.wrapS = THREE.RepeatWrapping;
+    grassTexture.wrapT = THREE.RepeatWrapping;
+    grassTexture.repeat.set(10, 10);
+    const grassMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
+    const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.y = -0.1;
+    scene.add(grass);
+}
+
+function addLighting() {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 10);
+    scene.add(directionalLight);
+}
+
+function createPlayerCar() {
+    car = createCar(colors[currentColorIndex]);
+    car.scale.set(0.5, 0.5, 0.5);
+    car.position.set(0, 0.5, 0);
+    scene.add(car);
+}
+
 function animate() {
     requestAnimationFrame(animate);
-    cars.forEach((car) => {
-        car.rotation.y += 0.01;
-    });
     renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onMouseDown(event) {
+    isDragging = true;
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+}
+
+function onMouseMove(event) {
+    if (!isDragging) return;
+
+    const deltaMove = {
+        x: event.clientX - previousMousePosition.x,
+        y: event.clientY - previousMousePosition.y
+    };
+
+    car.rotation.y += deltaMove.x * 0.01;
+
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+}
+
+function onMouseUp() {
+    isDragging = false;
+}
+
+function onKeyDown(event) {
+    if (event.key === 'c' || event.key === 'C') {
+        changeCarColor();
+    }
 }
 
 function changeCarColor() {
     currentColorIndex = (currentColorIndex + 1) % colors.length;
-    const playerCar = cars.get(window.socket.id);
-    if (playerCar) {
-        playerCar.children[0].material.color.setStyle(colors[currentColorIndex]);
-    }
+    car.children[0].material.color.setHex(colors[currentColorIndex]);
 }
 
 export function updatePlayerCars(players) {
-    // Remove cars that are no longer in the lobby
-    cars.forEach((car, id) => {
-        if (!players.some(player => player.id === id)) {
-            scene.remove(car);
-            cars.delete(id);
-        }
-    });
-
-    // Add or update cars for each player
-    players.forEach((player, index) => {
-        if (!cars.has(player.id)) {
-            const car = createCar(player.color || colors[index % colors.length]);
-            car.scale.set(0.5, 0.5, 0.5);
-            scene.add(car);
-            cars.set(player.id, car);
-        }
-        
-        // Position cars side by side
-        const car = cars.get(player.id);
-        car.position.set((index - (players.length - 1) / 2) * 2.5, 0.5, 0);
-        
-        // Update car color if it has changed
-        if (player.color) {
-            car.children[0].material.color.setStyle(player.color);
-        }
-    });
+    // In this version, we're only dealing with a single car
+    // You may want to adjust this function based on your multiplayer needs
 }
 
 export function disposeLobbyScene() {
-    cars.forEach((car) => scene.remove(car));
-    cars.clear();
+    scene.remove(car);
     renderer.dispose();
 }
