@@ -1,9 +1,10 @@
-const textDisplay = document.createElement('div');
-textDisplay.id = 'text-display';
-document.body.appendChild(textDisplay);
+import { updateCarProgress } from './threeSetup.js';
+
+const textDisplay = document.getElementById('text-display');
 
 let currentText = '';
 let typedText = '';
+let socket;
 
 export function updateParagraphDisplay(paragraph) {
     currentText = paragraph;
@@ -27,8 +28,6 @@ function renderText() {
     textDisplay.innerHTML = html;
 }
 
-import { updateCarProgress } from './threeSetup.js';
-
 export function handleUserInput(event) {
     const key = event.key;
     if (key === 'Backspace') {
@@ -49,4 +48,6 @@ export function getProgress() {
 
 export function initUI(socketId) {
     socket = socketId;
+    document.body.addEventListener('keydown', handleUserInput);
+    document.body.focus();
 }
