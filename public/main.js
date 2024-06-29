@@ -1,48 +1,37 @@
-import { initThreeJS, animate } from './threeSetup.js';
-import { updateCarPosition } from './car.js';
-import { updatePlayers, updatePlayerProgress, calculateProgress } from './gameState.js';
-import { updatePlayersDisplay, updateParagraphDisplay } from './ui.js';
+import { updateParagraphDisplay, handleUserInput, getProgress } from './ui.js';
 
 const socket = io();
 
-const typingInput = document.getElementById('typing-input');
-let currentParagraph = '';
 let players = new Map();
-let cars = new Map();
-
-initThreeJS();
-animate();
 
 socket.on('gameState', ({ players: serverPlayers, paragraph }) => {
-    currentParagraph = paragraph;
-    updatePlayers(serverPlayers, players, cars);
-    updateParagraphDisplay(currentParagraph);
+    players = new Map(serverPlayers.map(p => [p.id, p]));
+    updateParagraphDisplay(paragraph);
 });
 
 socket.on('newRound', ({ paragraph, players: serverPlayers }) => {
-    currentParagraph = paragraph;
-    typingInput.value = '';
-    updatePlayers(serverPlayers, players, cars);
-    updateParagraphDisplay(currentParagraph);
+    players = new Map(serverPlayers.map(p => [p.id, p]));
+    updateParagraphDisplay(paragraph);
 });
 
 socket.on('playerProgress', ({ id, progress }) => {
-    updatePlayerProgress(id, progress, players);
+    if (players.has(id)) {
+        players.get(id).progress = progress;
+    }
 });
 
 socket.on('playerDisconnected', (id) => {
     players.delete(id);
-    const car = cars.get(id);
-    if (car) {
-        scene.remove(car);
-        cars.delete(id);
-    }
-    updatePlayersDisplay(players);
 });
 
-typingInput.addEventListener('input', () => {
-    const progress = calculateProgress(typingInput.value, currentParagraph);
+document.addEventListener('keydown', (event) => {
+    handleUserInput(event);
+    const progress = getProgress();
     socket.emit('typingProgress', progress);
 });
 
-export { players, cars };
+function updatePlayers(serverPlayers) {
+    players = new Map(serverPlayers.map(p => [p.id, p]));
+}
+
+export { players };
