@@ -16,21 +16,21 @@ export function initMenu() {
 
     camera.position.z = 5;
 
-    createMenuItems();
-    animate();
-
-    window.addEventListener('resize', onWindowResize, false);
-    window.addEventListener('mousemove', onMouseMove, false);
-    window.addEventListener('click', onClick, false);
+    createMenuItems().then(() => {
+        animate();
+        window.addEventListener('resize', onWindowResize, false);
+        window.addEventListener('mousemove', onMouseMove, false);
+        window.addEventListener('click', onClick, false);
+    });
 }
 
-function createMenuItems() {
-    const createLobbyText = createText('Create Lobby');
+async function createMenuItems() {
+    const createLobbyText = await createText('Create Lobby');
     createLobbyText.position.set(0, 1, 0);
     scene.add(createLobbyText);
     menuItems.push({ mesh: createLobbyText, action: 'createLobby' });
 
-    const joinLobbyText = createText('Join Lobby');
+    const joinLobbyText = await createText('Join Lobby');
     joinLobbyText.position.set(0, -1, 0);
     scene.add(joinLobbyText);
     menuItems.push({ mesh: joinLobbyText, action: 'joinLobby' });
