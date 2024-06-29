@@ -16,6 +16,14 @@ initChatServer(io);
 const lobbies = new Map();
 const players = new Map();
 
+const fallbackParagraphs = [
+    "The quick brown fox jumps over the lazy dog.",
+    "A journey of a thousand miles begins with a single step.",
+    "To be or not to be, that is the question.",
+    "All that glitters is not gold.",
+    "Where there's a will, there's a way."
+];
+
 async function getRandomParagraph(wordCount = 20) {
     try {
         const response = await fetch(`https://random-word-api.herokuapp.com/word?number=${wordCount}`);
@@ -23,7 +31,8 @@ async function getRandomParagraph(wordCount = 20) {
         return words.join(' ');
     } catch (error) {
         console.error('Error fetching random words:', error);
-        return 'The quick brown fox jumps over the lazy dog.'; // Fallback sentence
+        // Use a random fallback paragraph
+        return fallbackParagraphs[Math.floor(Math.random() * fallbackParagraphs.length)];
     }
 }
 
