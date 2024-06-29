@@ -46,8 +46,11 @@ export function getProgress() {
     return (typedText.length / currentText.length) * 100;
 }
 
-export function initUI(socketId) {
-    socket = socketId;
+export function setSocket(socketInstance) {
+    socket = socketInstance;
+}
+
+export function initUI() {
     document.body.addEventListener('keydown', handleUserInput);
     document.body.focus();
 }
