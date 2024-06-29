@@ -1,5 +1,5 @@
-import { THREE } from './threeImport.js';
 import { createText } from './textCreator.js';
+import { THREE } from './threeImport.js';
 
 let scene, camera, renderer, raycaster, mouse;
 let menuItems = [];
