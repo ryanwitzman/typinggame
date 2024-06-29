@@ -39,7 +39,7 @@ socket.on('gameStarted', (gameState) => {
     initGame(gameState, socket);
 });
 
-export function startGame() {
+export function startGame(lobbyId) {
     socket.emit('startGame', lobbyId);
 }
 

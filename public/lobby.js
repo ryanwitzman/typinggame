@@ -63,7 +63,7 @@ function updateLobbyDisplay() {
     document.getElementById('lobby-container').appendChild(uiContainer);
 
     document.getElementById('start-game-btn').addEventListener('click', () => {
-        startGame();
+        startGame(lobbyId);
     });
 }
 
