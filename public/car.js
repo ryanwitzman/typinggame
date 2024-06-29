@@ -4,28 +4,36 @@ export function createCar(color = 0x1a75ff) {
     const carGroup = new THREE.Group();
 
     // Car body
-    const carBodyGeometry = new THREE.BoxGeometry(2, 0.5, 1);
+    const carBodyGeometry = new THREE.BoxGeometry(4, 1, 2);
     const carBodyMaterial = new THREE.MeshPhongMaterial({ color: color });
     const carBody = new THREE.Mesh(carBodyGeometry, carBodyMaterial);
-    carBody.position.y = 0.25;
+    carBody.position.y = 0.5;
     carGroup.add(carBody);
 
     // Car top
-    const carTopGeometry = new THREE.BoxGeometry(1.2, 0.4, 0.8);
+    const carTopGeometry = new THREE.BoxGeometry(2, 0.8, 1.8);
     const carTopMaterial = new THREE.MeshPhongMaterial({ color: color });
     const carTop = new THREE.Mesh(carTopGeometry, carTopMaterial);
-    carTop.position.set(0.2, 0.7, 0);
+    carTop.position.set(-0.5, 1.4, 0);
     carGroup.add(carTop);
 
+    // Windshield
+    const windshieldGeometry = new THREE.PlaneGeometry(1, 0.8);
+    const windshieldMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, transparent: true, opacity: 0.5 });
+    const windshield = new THREE.Mesh(windshieldGeometry, windshieldMaterial);
+    windshield.position.set(0.5, 1.4, 0.9);
+    windshield.rotation.x = Math.PI / 6;
+    carGroup.add(windshield);
+
     // Wheels
-    const wheelGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 32);
+    const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.2, 32);
     const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
     
     const wheelPositions = [
-        [-0.7, 0, 0.5],
-        [-0.7, 0, -0.5],
-        [0.7, 0, 0.5],
-        [0.7, 0, -0.5]
+        [-1.2, 0, 1],
+        [-1.2, 0, -1],
+        [1.2, 0, 1],
+        [1.2, 0, -1]
     ];
 
     wheelPositions.forEach(position => {
@@ -33,6 +41,22 @@ export function createCar(color = 0x1a75ff) {
         wheel.position.set(...position);
         wheel.rotation.z = Math.PI / 2;
         carGroup.add(wheel);
+    });
+
+    // Headlights
+    const headlightGeometry = new THREE.CircleGeometry(0.2, 32);
+    const headlightMaterial = new THREE.MeshPhongMaterial({ color: 0xffffaa, emissive: 0xffffaa });
+    
+    const headlightPositions = [
+        [2, 0.5, 0.8],
+        [2, 0.5, -0.8]
+    ];
+
+    headlightPositions.forEach(position => {
+        const headlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
+        headlight.position.set(...position);
+        headlight.rotation.y = Math.PI / 2;
+        carGroup.add(headlight);
     });
 
     return carGroup;

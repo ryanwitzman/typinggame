@@ -67,6 +67,9 @@ export function animate() {
 export function createPlayerCar(playerId) {
     const carColor = Math.random() * 0xffffff;
     const car = createCar(carColor);
+    car.scale.set(0.5, 0.5, 0.5); // Scale down the car to fit the scene better
+    car.position.set(-45, 0.5, 0); // Start position
+    car.progress = 0;
     cars.set(playerId, car);
     scene.add(car);
 }
@@ -75,6 +78,7 @@ export function updateCarProgress(playerId, progress) {
     const car = cars.get(playerId);
     if (car) {
         car.progress = progress;
+        updateCarPosition(car, progress);
     }
 }
 
