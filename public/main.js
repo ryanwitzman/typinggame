@@ -1,8 +1,13 @@
 import { updateParagraphDisplay, handleUserInput, getProgress } from './ui.js';
+import { initThreeJS, animate } from './threeSetup.js';
 
 const socket = io();
 
 let players = new Map();
+let cars = new Map();
+
+initThreeJS();
+animate();
 
 socket.on('gameState', ({ players: serverPlayers, paragraph }) => {
     players = new Map(serverPlayers.map(p => [p.id, p]));

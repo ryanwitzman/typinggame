@@ -27,6 +27,8 @@ function renderText() {
     textDisplay.innerHTML = html;
 }
 
+import { updateCarProgress } from './threeSetup.js';
+
 export function handleUserInput(event) {
     const key = event.key;
     if (key === 'Backspace') {
@@ -37,8 +39,14 @@ export function handleUserInput(event) {
         }
     }
     renderText();
+    const progress = getProgress();
+    updateCarProgress(socket.id, progress);
 }
 
 export function getProgress() {
     return (typedText.length / currentText.length) * 100;
+}
+
+export function initUI(socketId) {
+    socket = socketId;
 }

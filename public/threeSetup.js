@@ -1,7 +1,9 @@
-import { updateCarPosition } from './car.js';
-import { players, cars } from './main.js';
+import { createCar, updateCarPosition } from './car.js';
 
 let scene, camera, renderer;
+let cars = new Map();
+
+export { cars };
 
 export function initThreeJS() {
     scene = new THREE.Scene();
@@ -36,13 +38,23 @@ function addLighting() {
 
 export function animate() {
     requestAnimationFrame(animate);
-    players.forEach((player, id) => {
-        const car = cars.get(id);
-        if (car) {
-            updateCarPosition(car, player.progress);
-        }
+    cars.forEach((car, id) => {
+        updateCarPosition(car, car.progress);
     });
     renderer.render(scene, camera);
+}
+
+export function createPlayerCar(playerId) {
+    const car = createCar();
+    cars.set(playerId, car);
+    scene.add(car);
+}
+
+export function updateCarProgress(playerId, progress) {
+    const car = cars.get(playerId);
+    if (car) {
+        car.progress = progress;
+    }
 }
 
 export { scene };

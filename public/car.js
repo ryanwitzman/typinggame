@@ -59,4 +59,16 @@ export function updateCarPosition(car, progress) {
             child.rotation.y = wheelRotation;
         }
     });
+}import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
+
+export function createCar() {
+    const carGeometry = new THREE.BoxGeometry(2, 1, 3);
+    const carMaterial = new THREE.MeshPhongMaterial({ color: Math.random() * 0xffffff });
+    const car = new THREE.Mesh(carGeometry, carMaterial);
+    car.position.set(0, 0.5, 0);
+    return car;
+}
+
+export function updateCarPosition(car, progress) {
+    car.position.z = -progress / 2;
 }
