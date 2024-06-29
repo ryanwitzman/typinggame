@@ -1,6 +1,6 @@
 import { updateParagraphDisplay, handleUserInput, getProgress, setSocket, initUI } from './ui.js';
 import { initThreeJS, animate, createPlayerCar, updateCarProgress } from './threeSetup.js';
-import { initCutScene } from './cutScene.js';
+import { initCutScene } from './cutScene.js
 import { disposeLobbyScene } from './lobbyScene.js';
 
 let players = new Map();
@@ -47,6 +47,11 @@ function setupEventListeners() {
         const progress = getProgress();
         window.socket.emit('typingProgress', progress);
         updateCarProgress(window.socket.id, progress);
+    });
+}
+
+export { players };
+.id, progress);
     });
 }
 
