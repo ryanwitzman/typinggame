@@ -113,17 +113,18 @@ body, html {
     word-break: break-word;
     margin: 20px;
     font-family: monospace;
+    color: #333; /* Dark gray color for better contrast */
 }
 
 .correct {
-    color: green;
+    color: #006400; /* Dark green */
 }
 
 .incorrect {
-    color: red;
+    color: #8B0000; /* Dark red */
     text-decoration: underline;
 }
 
 .untyped {
-    color: gray;
+    color: #4A4A4A; /* Darker gray */
 }
