@@ -1,10 +1,11 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 import { createCar, updateCarPosition } from './car.js';
+import { initCutScene, playCutScene } from './cutScene.js';
 
 let scene, camera, renderer;
 let cars = new Map();
 
-export { cars };
+export { cars, scene, camera, renderer };
 
 export function initThreeJS() {
     scene = new THREE.Scene();
@@ -21,6 +22,8 @@ export function initThreeJS() {
     addLighting();
 
     window.addEventListener('resize', onWindowResize, false);
+    
+    initCutScene();
 }
 
 function createTrack() {
@@ -91,6 +94,11 @@ export function updateCarProgress(playerId, progress) {
         const startX = -45; // Starting X position
         car.position.x = startX + (progress / 100) * trackLength;
         console.log(`Car updated for player ${playerId}, progress: ${progress}`);
+
+        // Check if the car has reached the finish line
+        if (progress >= 100) {
+            playCutScene(car);
+        }
     } else {
         console.log(`Car not found for player ${playerId}`);
     }

@@ -1,5 +1,6 @@
 import { updateParagraphDisplay, handleUserInput, getProgress, setSocket, initUI } from './ui.js';
 import { initThreeJS, animate, createPlayerCar, updateCarProgress } from './threeSetup.js';
+import { initCutScene } from './cutScene.js';
 
 const socket = io();
 setSocket(socket);
@@ -10,6 +11,7 @@ let cars = new Map();
 initThreeJS();
 animate();
 initUI();
+initCutScene();
 
 function createOrUpdateCar(playerId) {
     if (!cars.has(playerId)) {
