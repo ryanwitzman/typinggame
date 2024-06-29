@@ -5,6 +5,7 @@ let scene, camera, renderer, raycaster, mouse;
 let menuItems = [];
 
 export function initMenu() {
+    console.log('Initializing menu');
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
@@ -14,28 +15,43 @@ export function initMenu() {
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
 
-    camera.position.z = 5;
+    camera.position.z = 10;
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
 
     createMenuItems().then(() => {
+        console.log('Menu items created');
         animate();
         window.addEventListener('resize', onWindowResize, false);
         window.addEventListener('mousemove', onMouseMove, false);
         window.addEventListener('click', onClick, false);
+    }).catch(error => {
+        console.error('Error creating menu items:', error);
     });
 }
 
 async function createMenuItems() {
-    const createLobbyText = await createText('Create Lobby');
-    createLobbyText.position.set(0, 1, 0);
-    scene.add(createLobbyText);
-    menuItems.push({ mesh: createLobbyText, action: 'createLobby' });
+    try {
+        console.log('Creating menu items');
+        const createLobbyText = await createText('Create Lobby');
+        createLobbyText.position.set(0, 2, 0);
+        scene.add(createLobbyText);
+        menuItems.push({ mesh: createLobbyText, action: 'createLobby' });
 
-    const joinLobbyText = await createText('Join Lobby');
-    joinLobbyText.position.set(0, -1, 0);
-    scene.add(joinLobbyText);
-    menuItems.push({ mesh: joinLobbyText, action: 'joinLobby' });
+        const joinLobbyText = await createText('Join Lobby');
+        joinLobbyText.position.set(0, -2, 0);
+        scene.add(joinLobbyText);
+        menuItems.push({ mesh: joinLobbyText, action: 'joinLobby' });
 
-    return Promise.resolve();
+        console.log('Menu items added to scene');
+    } catch (error) {
+        console.error('Error in createMenuItems:', error);
+    }
 }
 
 function animate() {
