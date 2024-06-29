@@ -1,6 +1,6 @@
-import { THREE, OrbitControls } from './threeImport.js';
+import { THREE } from './threeImport.js';
 
-let scene, camera, renderer, car, controls;
+let scene, camera, renderer, car;
 const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
 let currentColorIndex = 0;
 
@@ -33,11 +33,9 @@ export function initLobbyScene() {
     car.position.y = 0.25;
     scene.add(car);
 
-    // Set up camera and controls
-    camera.position.set(3, 3, 3);
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    // Set up camera
+    camera.position.set(0, 5, 5);
+    camera.lookAt(0, 0, 0);
 
     // Add event listener for color change
     document.addEventListener('keydown', (event) => {
@@ -51,7 +49,6 @@ export function initLobbyScene() {
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
     renderer.render(scene, camera);
 }
 
@@ -63,5 +60,4 @@ function changeCarColor() {
 export function disposeLobbyScene() {
     scene.remove(car);
     renderer.dispose();
-    controls.dispose();
 }
