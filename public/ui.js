@@ -1,71 +1,52 @@
-import { scene } from './threeSetup.js';
-
 const playersContainer = document.getElementById('players-container');
+const textDisplay = document.getElementById('text-display');
+let currentText = '';
+let typedText = '';
 
 export function updatePlayersDisplay(players) {
     playersContainer.innerHTML = '';
     players.forEach((player, id) => {
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
-        playerElement.innerHTML = `
-            <div>Player ${id.substr(0, 4)}</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: ${player.progress}%"></div>
-            </div>
-        `;
+        playerElement.innerHTML = `<div>Player ${id.substr(0, 4)}</div>`;
         playersContainer.appendChild(playerElement);
     });
 }
 
-export function updateParagraphDisplay(currentParagraph) {
-    const existingText = scene.getObjectByName('currentParagraph');
-    if (existingText) {
-        scene.remove(existingText);
-    }
-
-    const fontLoader = new THREE.FontLoader();
-    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-        const lines = wrapText(currentParagraph, 30);
-        const textGroup = new THREE.Group();
-        textGroup.name = 'currentParagraph';
-
-        lines.forEach((line, index) => {
-            const textGeometry = new THREE.TextGeometry(line, {
-                font: font,
-                size: 0.8,
-                height: 0.1,
-            });
-            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            
-            textGeometry.computeBoundingBox();
-            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-            textMesh.position.set(-textWidth / 2, 10 - index * 1.2, -5);
-            
-            textGroup.add(textMesh);
-        });
-        
-        scene.add(textGroup);
-    });
+export function updateParagraphDisplay(paragraph) {
+    currentText = paragraph;
+    typedText = '';
+    renderText();
 }
 
-function wrapText(text, maxCharsPerLine) {
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = '';
-
-    words.forEach(word => {
-        if ((currentLine + word).length <= maxCharsPerLine) {
-            currentLine += (currentLine ? ' ' : '') + word;
+function renderText() {
+    let html = '';
+    for (let i = 0; i < currentText.length; i++) {
+        if (i < typedText.length) {
+            if (typedText[i] === currentText[i]) {
+                html += `<span class="correct">${currentText[i]}</span>`;
+            } else {
+                html += `<span class="incorrect">${currentText[i]}</span>`;
+            }
         } else {
-            lines.push(currentLine);
-            currentLine = word;
+            html += `<span class="untyped">${currentText[i]}</span>`;
         }
-    });
-
-    if (currentLine) {
-        lines.push(currentLine);
     }
+    textDisplay.innerHTML = html;
+}
 
-    return lines;
+export function handleUserInput(event) {
+    const key = event.key;
+    if (key === 'Backspace') {
+        typedText = typedText.slice(0, -1);
+    } else if (key.length === 1) {
+        if (typedText.length < currentText.length && key === currentText[typedText.length]) {
+            typedText += key;
+        }
+    }
+    renderText();
+}
+
+export function getProgress() {
+    return (typedText.length / currentText.length) * 100;
 }
