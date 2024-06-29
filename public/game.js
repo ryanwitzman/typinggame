@@ -1,259 +1,51 @@
-const socket = io();
+import { updateParagraphDisplay, handleUserInput, getProgress, setSocket, initUI } from './ui.js';
+import { initThreeJS, animate, createPlayerCar, updateCarProgress } from './threeSetup.js';
+import { initCutScene } from './cutScene.js';
 
-const typingInput = document.getElementById('typing-input');
-const playersContainer = document.getElementById('players-container');
-
-let currentParagraph = '';
 let players = new Map();
 let cars = new Map();
 
-// Three.js setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.getElementById('three-container').appendChild(renderer.domElement);
+export function initGame(gameState) {
+    setSocket(window.socket);
+    players = new Map(gameState.players.map(p => [p.id, p]));
 
-camera.position.set(0, 5, 10);
-camera.lookAt(0, 0, 0);
+    initThreeJS();
+    animate();
+    initUI();
+    initCutScene();
 
-// Create a straight racing track
-const trackGeometry = new THREE.PlaneGeometry(100, 10);
-const trackMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
-const track = new THREE.Mesh(trackGeometry, trackMaterial);
-track.rotation.x = -Math.PI / 2;
-scene.add(track);
+    updateParagraphDisplay(gameState.paragraph);
+    players.forEach((player, id) => createOrUpdateCar(id));
 
-// Text will be created dynamically for each word
-
-function createCar(color) {
-    const carGroup = new THREE.Group();
-
-    // Car body
-    const carShape = new THREE.Shape();
-    carShape.moveTo(0, 0.4);
-    carShape.lineTo(0.2, 0.6);
-    carShape.lineTo(0.8, 0.6);
-    carShape.lineTo(1, 0.4);
-    carShape.lineTo(1, 0.2);
-    carShape.lineTo(0, 0.2);
-    carShape.lineTo(0, 0.4);
-
-    const extrudeSettings = {
-        steps: 2,
-        depth: 0.5,
-        bevelEnabled: true,
-        bevelThickness: 0.1,
-        bevelSize: 0.1,
-        bevelSegments: 1
-    };
-
-    const carGeometry = new THREE.ExtrudeGeometry(carShape, extrudeSettings);
-    const carMaterial = new THREE.MeshPhongMaterial({ color: color });
-    const carBody = new THREE.Mesh(carGeometry, carMaterial);
-    carGroup.add(carBody);
-
-    // Wheels
-    const wheelGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 32);
-    const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-    
-    const wheelPositions = [
-        [0.2, 0, 0.3],
-        [0.2, 0, -0.3],
-        [0.8, 0, 0.3],
-        [0.8, 0, -0.3]
-    ];
-
-    wheelPositions.forEach(position => {
-        const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-        wheel.position.set(...position);
-        wheel.rotation.z = Math.PI / 2;
-        carGroup.add(wheel);
-    });
-
-    carGroup.scale.set(2, 2, 2);
-    return carGroup;
+    setupEventListeners();
 }
 
-function updateCarPosition(car, progress) {
-    car.position.x = (progress / 100) * 90 - 45;
-    car.position.y = 0.5;
-    car.rotation.y = -Math.PI / 2;
-
-    // Rotate wheels
-    const wheelRotation = (progress / 100) * Math.PI * 20; // 10 full rotations over the course
-    car.children.forEach((child, index) => {
-        if (index > 0) { // Skip the first child (car body)
-            child.rotation.y = wheelRotation;
-        }
-    });
-}
-
-// Add lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(0, 10, 10);
-scene.add(directionalLight);
-
-// Update camera position
-camera.position.set(0, 20, 30);
-camera.lookAt(0, 0, 0);
-
-function animate() {
-    requestAnimationFrame(animate);
-    players.forEach((player, id) => {
-        const car = cars.get(id);
-        if (car) {
-            updateCarPosition(car, player.progress);
-        }
-    });
-    renderer.render(scene, camera);
-}
-animate();
-
-socket.on('gameState', ({ players: serverPlayers, paragraph }) => {
-    currentParagraph = paragraph;
-    updatePlayers(serverPlayers);
-    updateParagraphDisplay();
-});
-
-socket.on('newRound', ({ paragraph, players: serverPlayers }) => {
-    currentParagraph = paragraph;
-    typingInput.value = '';
-    updatePlayers(serverPlayers);
-    updateParagraphDisplay();
-});
-
-socket.on('playerProgress', ({ id, progress }) => {
-    updatePlayerProgress(id, progress);
-});
-
-socket.on('playerDisconnected', (id) => {
-    players.delete(id);
-    const car = cars.get(id);
-    if (car) {
-        scene.remove(car);
-        cars.delete(id);
+function createOrUpdateCar(playerId) {
+    if (!cars.has(playerId)) {
+        createPlayerCar(playerId);
     }
-    updatePlayersDisplay();
-});
-
-typingInput.addEventListener('input', () => {
-    const progress = calculateProgress(typingInput.value, currentWord);
-    socket.emit('typingProgress', progress);
-});
-
-function calculateProgress(typed, target) {
-    const words = target.split(' ');
-    const typedWords = typed.split(' ');
-    let correctChars = 0;
-    let totalChars = 0;
-
-    for (let i = 0; i < words.length; i++) {
-        const targetWord = words[i];
-        const typedWord = typedWords[i] || '';
-        
-        for (let j = 0; j < targetWord.length; j++) {
-            if (j < typedWord.length && targetWord[j] === typedWord[j]) {
-                correctChars++;
-            }
-            totalChars++;
-        }
-        
-        if (i < words.length - 1) {
-            totalChars++; // Count space between words
-        }
-    }
-
-    return (correctChars / totalChars) * 100;
+    updateCarProgress(playerId, players.get(playerId).progress);
 }
 
-function updatePlayers(serverPlayers) {
-    serverPlayers.forEach(player => {
-        if (!players.has(player.id)) {
-            const car = createCar(Math.random() * 0xffffff);
-            scene.add(car);
-            cars.set(player.id, car);
-        }
-        players.set(player.id, player);
-    });
-    updatePlayersDisplay();
-}
-
-function updatePlayerProgress(id, progress) {
-    const player = players.get(id);
-    if (player) {
-        player.progress = progress;
-        updatePlayersDisplay();
-    }
-}
-
-function updatePlayersDisplay() {
-    playersContainer.innerHTML = '';
-    players.forEach((player, id) => {
-        const playerElement = document.createElement('div');
-        playerElement.className = 'player';
-        playerElement.innerHTML = `
-            <div>Player ${id.substr(0, 4)}</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: ${player.progress}%"></div>
-            </div>
-        `;
-        playersContainer.appendChild(playerElement);
-    });
-}
-
-function updateParagraphDisplay() {
-    const existingText = scene.getObjectByName('currentParagraph');
-    if (existingText) {
-        scene.remove(existingText);
-    }
-
-    const fontLoader = new THREE.FontLoader();
-    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-        const lines = wrapText(currentParagraph, 30);
-        const textGroup = new THREE.Group();
-        textGroup.name = 'currentParagraph';
-
-        lines.forEach((line, index) => {
-            const textGeometry = new THREE.TextGeometry(line, {
-                font: font,
-                size: 0.8,
-                height: 0.1,
-            });
-            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            
-            textGeometry.computeBoundingBox();
-            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-            textMesh.position.set(-textWidth / 2, 10 - index * 1.2, -5);
-            
-            textGroup.add(textMesh);
-        });
-        
-        scene.add(textGroup);
-    });
-}
-
-function wrapText(text, maxCharsPerLine) {
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = '';
-
-    words.forEach(word => {
-        if ((currentLine + word).length <= maxCharsPerLine) {
-            currentLine += (currentLine ? ' ' : '') + word;
-        } else {
-            lines.push(currentLine);
-            currentLine = word;
+function setupEventListeners() {
+    window.socket.on('playerProgress', ({ id, progress }) => {
+        if (players.has(id)) {
+            players.get(id).progress = progress;
+            updateCarProgress(id, progress);
         }
     });
 
-    if (currentLine) {
-        lines.push(currentLine);
-    }
+    window.socket.on('playerDisconnected', (id) => {
+        players.delete(id);
+        // Remove car from scene
+    });
 
-    return lines;
+    document.addEventListener('keydown', (event) => {
+        handleUserInput(event);
+        const progress = getProgress();
+        window.socket.emit('typingProgress', progress);
+        updateCarProgress(window.socket.id, progress);
+    });
 }
+
+export { players };
