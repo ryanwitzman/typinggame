@@ -3,7 +3,7 @@ const socket = io();
 const typingInput = document.getElementById('typing-input');
 const playersContainer = document.getElementById('players-container');
 
-let currentWord = '';
+let currentParagraph = '';
 let players = new Map();
 let cars = new Map();
 
@@ -113,17 +113,17 @@ function animate() {
 }
 animate();
 
-socket.on('gameState', ({ players: serverPlayers, currentWord: serverWord }) => {
-    currentWord = serverWord;
+socket.on('gameState', ({ players: serverPlayers, paragraph }) => {
+    currentParagraph = paragraph;
     updatePlayers(serverPlayers);
-    updateWordDisplay();
+    updateParagraphDisplay();
 });
 
-socket.on('newRound', ({ currentWord: newWord, players: serverPlayers }) => {
-    currentWord = newWord;
+socket.on('newRound', ({ paragraph, players: serverPlayers }) => {
+    currentParagraph = paragraph;
     typingInput.value = '';
     updatePlayers(serverPlayers);
-    updateWordDisplay();
+    updateParagraphDisplay();
 });
 
 socket.on('playerProgress', ({ id, progress }) => {
@@ -146,11 +146,28 @@ typingInput.addEventListener('input', () => {
 });
 
 function calculateProgress(typed, target) {
-    let correct = 0;
-    for (let i = 0; i < typed.length && i < target.length; i++) {
-        if (typed[i] === target[i]) correct++;
+    const words = target.split(' ');
+    const typedWords = typed.split(' ');
+    let correctChars = 0;
+    let totalChars = 0;
+
+    for (let i = 0; i < words.length; i++) {
+        const targetWord = words[i];
+        const typedWord = typedWords[i] || '';
+        
+        for (let j = 0; j < targetWord.length; j++) {
+            if (j < typedWord.length && targetWord[j] === typedWord[j]) {
+                correctChars++;
+            }
+            totalChars++;
+        }
+        
+        if (i < words.length - 1) {
+            totalChars++; // Count space between words
+        }
     }
-    return (correct / target.length) * 100;
+
+    return (correctChars / totalChars) * 100;
 }
 
 function updatePlayers(serverPlayers) {
@@ -188,28 +205,55 @@ function updatePlayersDisplay() {
     });
 }
 
-function updateWordDisplay() {
-    const existingText = scene.getObjectByName('currentWord');
+function updateParagraphDisplay() {
+    const existingText = scene.getObjectByName('currentParagraph');
     if (existingText) {
         scene.remove(existingText);
     }
 
     const fontLoader = new THREE.FontLoader();
     fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-        const textGeometry = new THREE.TextGeometry(currentWord, {
-            font: font,
-            size: 1.5,
-            height: 0.1,
+        const lines = wrapText(currentParagraph, 30);
+        const textGroup = new THREE.Group();
+        textGroup.name = 'currentParagraph';
+
+        lines.forEach((line, index) => {
+            const textGeometry = new THREE.TextGeometry(line, {
+                font: font,
+                size: 0.8,
+                height: 0.1,
+            });
+            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            
+            textGeometry.computeBoundingBox();
+            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+            textMesh.position.set(-textWidth / 2, 10 - index * 1.2, -5);
+            
+            textGroup.add(textMesh);
         });
-        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-        textMesh.name = 'currentWord';
         
-        // Center the text
-        textGeometry.computeBoundingBox();
-        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-        textMesh.position.set(-textWidth / 2, 10, -5);
-        
-        scene.add(textMesh);
+        scene.add(textGroup);
     });
+}
+
+function wrapText(text, maxCharsPerLine) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    words.forEach(word => {
+        if ((currentLine + word).length <= maxCharsPerLine) {
+            currentLine += (currentLine ? ' ' : '') + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    });
+
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines;
 }
