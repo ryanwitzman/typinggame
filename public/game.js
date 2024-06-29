@@ -1,6 +1,7 @@
 import { updateParagraphDisplay, handleUserInput, getProgress, setSocket, initUI } from './ui.js';
 import { initThreeJS, animate, createPlayerCar, updateCarProgress } from './threeSetup.js';
 import { initCutScene } from './cutScene.js';
+import { disposeLobbyScene } from './lobbyScene.js';
 
 let players = new Map();
 let cars = new Map();
@@ -9,6 +10,7 @@ export function initGame(gameState) {
     setSocket(window.socket);
     players = new Map(gameState.players.map(p => [p.id, p]));
 
+    disposeLobbyScene();
     initThreeJS();
     animate();
     initUI();

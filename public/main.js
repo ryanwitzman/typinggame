@@ -33,6 +33,7 @@ socket.on('lobbyUpdate', (lobbyData) => {
 
 socket.on('gameStarted', (gameState) => {
     currentState = 'game';
+    hideLobby();
     initGame(gameState);
 });
 
