@@ -1,40 +1,48 @@
-import { updatePlayersDisplay, updateParagraphDisplay, handleUserInput, getProgress } from './ui.js';
+import { initThreeJS, animate } from './threeSetup.js';
+import { updateCarPosition } from './car.js';
+import { updatePlayers, updatePlayerProgress, calculateProgress } from './gameState.js';
+import { updatePlayersDisplay, updateParagraphDisplay } from './ui.js';
 
 const socket = io();
 
+const typingInput = document.getElementById('typing-input');
+let currentParagraph = '';
 let players = new Map();
+let cars = new Map();
+
+initThreeJS();
+animate();
 
 socket.on('gameState', ({ players: serverPlayers, paragraph }) => {
-    updatePlayers(serverPlayers);
-    updateParagraphDisplay(paragraph);
+    currentParagraph = paragraph;
+    updatePlayers(serverPlayers, players, cars);
+    updateParagraphDisplay(currentParagraph);
 });
 
 socket.on('newRound', ({ paragraph, players: serverPlayers }) => {
-    updatePlayers(serverPlayers);
-    updateParagraphDisplay(paragraph);
+    currentParagraph = paragraph;
+    typingInput.value = '';
+    updatePlayers(serverPlayers, players, cars);
+    updateParagraphDisplay(currentParagraph);
 });
 
 socket.on('playerProgress', ({ id, progress }) => {
-    if (players.has(id)) {
-        players.get(id).progress = progress;
-        updatePlayersDisplay(players);
-    }
+    updatePlayerProgress(id, progress, players);
 });
 
 socket.on('playerDisconnected', (id) => {
     players.delete(id);
+    const car = cars.get(id);
+    if (car) {
+        scene.remove(car);
+        cars.delete(id);
+    }
     updatePlayersDisplay(players);
 });
 
-document.addEventListener('keydown', (event) => {
-    handleUserInput(event);
-    const progress = getProgress();
+typingInput.addEventListener('input', () => {
+    const progress = calculateProgress(typingInput.value, currentParagraph);
     socket.emit('typingProgress', progress);
 });
 
-function updatePlayers(serverPlayers) {
-    players = new Map(Object.entries(serverPlayers));
-    updatePlayersDisplay(players);
-}
-
-export { players };
+export { players, cars };
