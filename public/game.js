@@ -5,8 +5,8 @@ import { disposeLobbyScene } from './lobbyScene.js';
 
 let players = new Map();
 
-export function initGame(gameState) {
-    setSocket(window.socket);
+export function initGame(gameState, socket) {
+    setSocket(socket);
     players = new Map(gameState.players.map(p => [p.id, p]));
 
     disposeLobbyScene();
@@ -18,7 +18,28 @@ export function initGame(gameState) {
     updateParagraphDisplay(gameState.paragraph);
     players.forEach((player, id) => createOrUpdateCar(id));
 
-    setupEventListeners();
+    setupEventListeners(socket);
+}
+
+function setupEventListeners(socket) {
+    socket.on('playerProgress', ({ id, progress }) => {
+        if (players.has(id)) {
+            players.get(id).progress = progress;
+            updateCarProgress(id, progress);
+        }
+    });
+
+    socket.on('playerDisconnected', (id) => {
+        players.delete(id);
+        // Remove car from scene
+    });
+
+    document.addEventListener('keydown', (event) => {
+        handleUserInput(event);
+        const progress = getProgress();
+        socket.emit('typingProgress', progress);
+        updateCarProgress(socket.id, progress);
+    });
 }
 
 function createOrUpdateCar(playerId) {

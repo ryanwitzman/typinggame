@@ -36,7 +36,7 @@ socket.on('lobbyUpdate', (lobbyData) => {
 socket.on('gameStarted', (gameState) => {
     currentState = 'game';
     hideLobby();
-    initGame(gameState);
+    initGame(gameState, socket);
 });
 
 export function startGame() {
