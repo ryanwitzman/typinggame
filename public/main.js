@@ -1,5 +1,6 @@
 import { initMenu, showLobbyList } from './menu.js';
 import { initGame } from './game.js';
+import { showLobby, updateLobby, hideLobby } from './lobby.js';
 
 const socket = io();
 window.socket = socket;
@@ -8,9 +9,13 @@ let currentState = 'menu';
 
 initMenu();
 
+export function getLobbyList() {
+    socket.emit('getLobbyList');
+}
+
 socket.on('lobbyCreated', (lobbyId) => {
     console.log(`Lobby created with ID: ${lobbyId}`);
-    // Implement lobby waiting room
+    showLobby(lobbyId);
 });
 
 socket.on('lobbyList', async (lobbies) => {
@@ -19,7 +24,11 @@ socket.on('lobbyList', async (lobbies) => {
 
 socket.on('joinedLobby', (lobbyId) => {
     console.log(`Joined lobby with ID: ${lobbyId}`);
-    // Implement lobby waiting room
+    showLobby(lobbyId);
+});
+
+socket.on('lobbyUpdate', (lobbyData) => {
+    updateLobby(lobbyData);
 });
 
 socket.on('gameStarted', (gameState) => {

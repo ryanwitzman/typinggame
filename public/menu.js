@@ -93,13 +93,16 @@ function onClick(event) {
     }
 }
 
-function handleMenuAction(action) {
+function handleMenuAction(action, lobbyId) {
     switch (action) {
         case 'createLobby':
             window.socket.emit('createLobby');
             break;
         case 'joinLobby':
-            // Implement join lobby logic
+            window.socket.emit('joinLobby', lobbyId);
+            break;
+        case 'back':
+            initMenu();
             break;
     }
 }
@@ -114,10 +117,10 @@ export async function showLobbyList(lobbies) {
     // Create lobby list
     for (let i = 0; i < lobbies.length; i++) {
         const lobby = lobbies[i];
-        const lobbyText = await createText(`Join Lobby ${lobby.id}`);
+        const lobbyText = await createText(`Join Lobby ${lobby}`);
         lobbyText.position.set(0, 2 - i, 0);
         scene.add(lobbyText);
-        menuItems.push({ mesh: lobbyText, action: 'joinLobby', lobbyId: lobby.id });
+        menuItems.push({ mesh: lobbyText, action: 'joinLobby', lobbyId: lobby });
     }
 
     // Add back button
