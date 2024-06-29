@@ -1,10 +1,9 @@
 import { updateParagraphDisplay, handleUserInput, getProgress, setSocket, initUI } from './ui.js';
-import { initThreeJS, animate, createPlayerCar, updateCarProgress } from './threeSetup.js';
-import { initCutScene } from './cutScene.js
+import { initThreeJS, animate, createPlayerCar, updateCarProgress, cars } from './threeSetup.js';
+import { initCutScene } from './cutScene.js';
 import { disposeLobbyScene } from './lobbyScene.js';
 
 let players = new Map();
-let cars = new Map();
 
 export function initGame(gameState) {
     setSocket(window.socket);
@@ -26,7 +25,10 @@ function createOrUpdateCar(playerId) {
     if (!cars.has(playerId)) {
         createPlayerCar(playerId);
     }
-    updateCarProgress(playerId, players.get(playerId).progress);
+    const player = players.get(playerId);
+    if (player) {
+        updateCarProgress(playerId, player.progress);
+    }
 }
 
 function setupEventListeners() {
@@ -47,11 +49,6 @@ function setupEventListeners() {
         const progress = getProgress();
         window.socket.emit('typingProgress', progress);
         updateCarProgress(window.socket.id, progress);
-    });
-}
-
-export { players };
-.id, progress);
     });
 }
 
