@@ -24,6 +24,12 @@ export function initThreeJS() {
     window.addEventListener('resize', onWindowResize, false);
     
     initCutScene();
+
+    // Create a car for the local player
+    createPlayerCar('localPlayer');
+
+    // Start the animation loop
+    animate();
 }
 
 function createTrack() {
@@ -69,7 +75,7 @@ function addLighting() {
 
 export function animate() {
     requestAnimationFrame(animate);
-    cars.forEach((car, id) => {
+    cars.forEach((car) => {
         updateCarPosition(car, car.progress);
     });
     renderer.render(scene, camera);
@@ -90,9 +96,7 @@ export function updateCarProgress(playerId, progress) {
     const car = cars.get(playerId);
     if (car) {
         car.progress = progress;
-        const trackLength = 95; // Length of the track (from -45 to 50)
-        const startX = -45; // Starting X position
-        car.position.x = startX + (progress / 100) * trackLength;
+        updateCarPosition(car, progress);
         console.log(`Car updated for player ${playerId}, progress: ${progress}`);
 
         // Check if the car has reached the finish line
