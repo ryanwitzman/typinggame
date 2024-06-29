@@ -21,6 +21,11 @@ export function initMenu() {
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
+    // Add background
+    const loader = new THREE.TextureLoader();
+    const bgTexture = loader.load('path/to/background_image.jpg');
+    scene.background = bgTexture;
+
     // Add car
     const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
     const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -28,10 +33,11 @@ export function initMenu() {
     scene.add(car);
 
     // Add ground
-    const groundGeometry = new THREE.PlaneGeometry(10, 10);
-    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.25;
     scene.add(ground);
 
     // Add buttons
@@ -42,20 +48,36 @@ export function initMenu() {
 }
 
 function createMenuButtons() {
+    const buttonStyle = `
+        position: absolute;
+        padding: 10px 20px;
+        font-size: 18px;
+        color: white;
+        background-color: #4CAF50;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    `;
+
     createLobbyButton = document.createElement('button');
     createLobbyButton.textContent = 'Create Lobby';
-    createLobbyButton.style.position = 'absolute';
+    createLobbyButton.style.cssText = buttonStyle;
     createLobbyButton.style.left = '20px';
     createLobbyButton.style.top = '20px';
     createLobbyButton.addEventListener('click', () => handleMenuAction('createLobby'));
+    createLobbyButton.addEventListener('mouseover', () => createLobbyButton.style.backgroundColor = '#45a049');
+    createLobbyButton.addEventListener('mouseout', () => createLobbyButton.style.backgroundColor = '#4CAF50');
     document.body.appendChild(createLobbyButton);
 
     joinLobbyButton = document.createElement('button');
     joinLobbyButton.textContent = 'Join Lobby';
-    joinLobbyButton.style.position = 'absolute';
+    joinLobbyButton.style.cssText = buttonStyle;
     joinLobbyButton.style.left = '20px';
-    joinLobbyButton.style.top = '60px';
+    joinLobbyButton.style.top = '80px';
     joinLobbyButton.addEventListener('click', () => handleMenuAction('joinLobby'));
+    joinLobbyButton.addEventListener('mouseover', () => joinLobbyButton.style.backgroundColor = '#45a049');
+    joinLobbyButton.addEventListener('mouseout', () => joinLobbyButton.style.backgroundColor = '#4CAF50');
     document.body.appendChild(joinLobbyButton);
 }
 
