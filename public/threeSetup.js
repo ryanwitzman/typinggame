@@ -72,6 +72,7 @@ export function createPlayerCar(playerId) {
     car.progress = 0;
     cars.set(playerId, car);
     scene.add(car);
+    console.log(`Car created for player ${playerId}`);
 }
 
 export function updateCarProgress(playerId, progress) {
@@ -79,6 +80,9 @@ export function updateCarProgress(playerId, progress) {
     if (car) {
         car.progress = progress;
         updateCarPosition(car, progress);
+        console.log(`Car updated for player ${playerId}, progress: ${progress}`);
+    } else {
+        console.log(`Car not found for player ${playerId}`);
     }
 }
 
