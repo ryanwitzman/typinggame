@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
 
     socket.on('startGame', (lobbyId) => {
         const lobby = lobbies.get(lobbyId);
-        if (lobby) {
+        if (lobby && !lobby.gameStarted) {
             lobby.paragraph = getRandomParagraph();
             const gameState = {
                 players: Array.from(lobby.players.values()),
