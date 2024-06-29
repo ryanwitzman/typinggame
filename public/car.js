@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from '../node_modules/three/build/three.module.js';
 
 export function createCar(color = 0x1a75ff) {
     const carGroup = new THREE.Group();
