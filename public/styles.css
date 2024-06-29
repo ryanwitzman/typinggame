@@ -113,18 +113,22 @@ body, html {
     word-break: break-word;
     margin: 20px;
     font-family: monospace;
-    color: #333; /* Dark gray color for better contrast */
+    color: #FFFFFF; /* White text */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8); /* Text shadow for better visibility */
 }
 
 .correct {
-    color: #006400; /* Dark green */
+    color: #00FF00; /* Bright green */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
 .incorrect {
-    color: #8B0000; /* Dark red */
+    color: #FF0000; /* Bright red */
     text-decoration: underline;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
 .untyped {
-    color: #4A4A4A; /* Darker gray */
+    color: #FFFFFF; /* White */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
