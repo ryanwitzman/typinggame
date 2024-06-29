@@ -25,9 +25,6 @@ export function initThreeJS() {
     
     initCutScene();
 
-    // Create a car for the local player
-    createPlayerCar('localPlayer');
-
     // Start the animation loop
     animate();
 }
@@ -99,24 +96,21 @@ export function createPlayerCar(playerId) {
     cars.set(playerId, car);
     scene.add(car);
     console.log(`Car created for player ${playerId}`);
+    return car;
 }
 
 export function updateCarProgress(playerId, progress) {
-    const car = cars.get(playerId);
-    if (car) {
-        car.progress = progress;
-        updateCarPosition(car, progress);
-        console.log(`Car updated for player ${playerId}, progress: ${progress}`);
+    let car = cars.get(playerId);
+    if (!car) {
+        car = createPlayerCar(playerId);
+    }
+    car.progress = progress;
+    updateCarPosition(car, progress);
+    console.log(`Car updated for player ${playerId}, progress: ${progress}`);
 
-        // Check if the car has reached the finish line
-        if (progress >= 100) {
-            playCutScene(car);
-        }
-    } else {
-        console.log(`Car not found for player ${playerId}`);
-        // If the car doesn't exist, create it and update its progress
-        createPlayerCar(playerId);
-        updateCarProgress(playerId, progress);
+    // Check if the car has reached the finish line
+    if (progress >= 100) {
+        playCutScene(car);
     }
 }
 
