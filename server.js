@@ -58,10 +58,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('startGame', async (lobbyId) => {
+    socket.on('startGame', (lobbyId) => {
         const lobby = lobbies.get(lobbyId);
         if (lobby) {
-            lobby.paragraph = await getRandomParagraph();
+            lobby.paragraph = getRandomParagraph();
             const gameState = {
                 players: Array.from(lobby.players.values()),
                 paragraph: lobby.paragraph
