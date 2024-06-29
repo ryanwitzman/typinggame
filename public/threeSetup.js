@@ -79,7 +79,9 @@ export function updateCarProgress(playerId, progress) {
     const car = cars.get(playerId);
     if (car) {
         car.progress = progress;
-        updateCarPosition(car, progress);
+        const trackLength = 90; // Length of the track
+        const startX = -45; // Starting X position
+        car.position.x = startX + (progress / 100) * trackLength;
         console.log(`Car updated for player ${playerId}, progress: ${progress}`);
     } else {
         console.log(`Car not found for player ${playerId}`);
