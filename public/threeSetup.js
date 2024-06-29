@@ -76,7 +76,9 @@ function addLighting() {
 export function animate() {
     requestAnimationFrame(animate);
     cars.forEach((car) => {
-        updateCarPosition(car, car.progress);
+        if (car.progress !== undefined) {
+            updateCarPosition(car, car.progress);
+        }
     });
     renderer.render(scene, camera);
 }
@@ -105,6 +107,9 @@ export function updateCarProgress(playerId, progress) {
         }
     } else {
         console.log(`Car not found for player ${playerId}`);
+        // If the car doesn't exist, create it
+        createPlayerCar(playerId);
+        updateCarProgress(playerId, progress);
     }
 }
 

@@ -40,6 +40,7 @@ export function handleUserInput(event) {
     renderText();
     const progress = getProgress();
     updateCarProgress(socket.id, progress);
+    socket.emit('updateProgress', progress);
 }
 
 export function getProgress() {
