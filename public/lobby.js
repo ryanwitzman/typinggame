@@ -1,5 +1,5 @@
 import { startGame } from './main.js';
-import { initLobbyScene, disposeLobbyScene } from './lobbyScene.js';
+import { initLobbyScene, disposeLobbyScene, updatePlayerCars } from './lobbyScene.js';
 
 let lobbyId;
 let players = [];
@@ -14,11 +14,13 @@ export function showLobby(id) {
     
     initLobbyScene();
     updateLobbyDisplay();
+    initChat();
 }
 
 export function updateLobby(lobbyData) {
     players = lobbyData.players;
     updateLobbyDisplay();
+    updatePlayerCars(players);
 }
 
 function updateLobbyDisplay() {
@@ -37,6 +39,11 @@ function updateLobbyDisplay() {
         </ul>
         <button id="start-game-btn">Start Game</button>
         <p>Press 'C' to change car color</p>
+        <div id="chat-container">
+            <div id="chat-messages"></div>
+            <input type="text" id="chat-input" placeholder="Type your message...">
+            <button id="chat-send">Send</button>
+        </div>
     `;
 
     const existingUI = document.getElementById('lobby-ui');
@@ -50,6 +57,37 @@ function updateLobbyDisplay() {
     });
 }
 
+function initChat() {
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatMessages = document.getElementById('chat-messages');
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    window.socket.on('lobbyMessage', (data) => {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = `${data.sender}: ${data.message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    window.socket.emit('joinLobbyChat', lobbyId);
+}
+
+function sendMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const message = chatInput.value.trim();
+    if (message) {
+        window.socket.emit('lobbyMessage', { lobbyId, message });
+        chatInput.value = '';
+    }
+}
+
 export function hideLobby() {
     const menuContainer = document.getElementById('menu-container');
     const lobbyContainer = document.getElementById('lobby-container');
@@ -58,4 +96,5 @@ export function hideLobby() {
     lobbyContainer.style.display = 'none';
     
     disposeLobbyScene();
+    window.socket.emit('leaveLobbyChat', lobbyId);
 }

@@ -3,12 +3,15 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fetch = require('node-fetch');
+const { initChatServer } = require('./chat_server');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+initChatServer(io);
 
 const lobbies = new Map();
 const players = new Map();

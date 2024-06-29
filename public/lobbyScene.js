@@ -1,6 +1,8 @@
 import { THREE } from './threeImport.js';
+import { createCar } from './car.js';
 
-let scene, camera, renderer, car;
+let scene, camera, renderer;
+const cars = new Map();
 const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
 let currentColorIndex = 0;
 
@@ -20,21 +22,14 @@ export function initLobbyScene() {
 
     // Add grass plane
     const grassTexture = new THREE.TextureLoader().load('grass_texture.jpg');
-    const grassGeometry = new THREE.PlaneGeometry(10, 10);
+    const grassGeometry = new THREE.PlaneGeometry(20, 10);
     const grassMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
     const grass = new THREE.Mesh(grassGeometry, grassMaterial);
     grass.rotation.x = -Math.PI / 2;
     scene.add(grass);
 
-    // Add car
-    const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
-    const carMaterial = new THREE.MeshStandardMaterial({ color: colors[currentColorIndex] });
-    car = new THREE.Mesh(carGeometry, carMaterial);
-    car.position.y = 0.25;
-    scene.add(car);
-
     // Set up camera
-    camera.position.set(0, 5, 5);
+    camera.position.set(0, 5, 10);
     camera.lookAt(0, 0, 0);
 
     // Add event listener for color change
@@ -49,15 +44,46 @@ export function initLobbyScene() {
 
 function animate() {
     requestAnimationFrame(animate);
+    cars.forEach((car) => {
+        car.rotation.y += 0.01;
+    });
     renderer.render(scene, camera);
 }
 
 function changeCarColor() {
     currentColorIndex = (currentColorIndex + 1) % colors.length;
-    car.material.color.setStyle(colors[currentColorIndex]);
+    const playerCar = cars.get(window.socket.id);
+    if (playerCar) {
+        playerCar.children[0].material.color.setStyle(colors[currentColorIndex]);
+    }
+}
+
+export function updatePlayerCars(players) {
+    // Remove cars that are no longer in the lobby
+    cars.forEach((car, id) => {
+        if (!players.includes(id)) {
+            scene.remove(car);
+            cars.delete(id);
+        }
+    });
+
+    // Add or update cars for each player
+    players.forEach((playerId, index) => {
+        if (!cars.has(playerId)) {
+            const car = createCar(colors[index % colors.length]);
+            car.scale.set(0.5, 0.5, 0.5);
+            scene.add(car);
+            cars.set(playerId, car);
+        }
+        
+        // Position cars side by side
+        const car = cars.get(playerId);
+        car.position.set((index - (players.length - 1) / 2) * 2.5, 0.5, 0);
+    });
 }
 
 export function disposeLobbyScene() {
-    scene.remove(car);
+    cars.forEach((car) => scene.remove(car));
+    cars.clear();
     renderer.dispose();
 }
