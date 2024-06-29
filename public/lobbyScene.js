@@ -1,4 +1,5 @@
-import  { THREE, OrbitControls } from './threeImport.js';
+import { THREE } from './threeImport.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.138.0/examples/jsm/controls/OrbitControls.js';
 
 let scene, camera, renderer, car, controls;
 const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
