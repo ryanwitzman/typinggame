@@ -1,5 +1,4 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+import  { THREE, OrbitControls } from './threeImport.js';
 
 let scene, camera, renderer, car, controls;
 const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
@@ -20,7 +19,7 @@ export function initLobbyScene() {
     scene.add(directionalLight);
 
     // Add grass plane
-    const grassTexture = new THREE.TextureLoader().load('path/to/grass_texture.jpg');
+    const grassTexture = new THREE.TextureLoader().load('grass_texture.jpg');
     const grassGeometry = new THREE.PlaneGeometry(10, 10);
     const grassMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
     const grass = new THREE.Mesh(grassGeometry, grassMaterial);
