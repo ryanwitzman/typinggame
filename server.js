@@ -10,8 +10,8 @@ const io = socketIo(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const lobbies = new Map();
 const players = new Map();
-let currentParagraphs = new Map();
 
 async function getRandomParagraph(wordCount = 20) {
     try {
@@ -24,47 +24,61 @@ async function getRandomParagraph(wordCount = 20) {
     }
 }
 
-io.on('connection', async (socket) => {
+io.on('connection', (socket) => {
     console.log('New player connected');
 
-    const paragraph = await getRandomParagraph();
-    players.set(socket.id, { id: socket.id, progress: 0 });
-    currentParagraphs.set(socket.id, paragraph);
+    socket.on('createLobby', () => {
+        const lobbyId = Math.random().toString(36).substring(2, 8);
+        lobbies.set(lobbyId, { players: new Set(), paragraph: null });
+        socket.join(lobbyId);
+        socket.emit('lobbyCreated', lobbyId);
+    });
 
-    socket.emit('gameState', { 
-        players: Array.from(players.values()), 
-        paragraph: paragraph 
+    socket.on('joinLobby', (lobbyId) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby) {
+            socket.join(lobbyId);
+            lobby.players.add(socket.id);
+            socket.emit('joinedLobby', lobbyId);
+            io.to(lobbyId).emit('playerJoined', { id: socket.id, progress: 0 });
+        } else {
+            socket.emit('error', 'Lobby not found');
+        }
+    });
+
+    socket.on('startGame', async () => {
+        const lobbyId = Array.from(socket.rooms).find(room => room !== socket.id);
+        if (lobbyId && lobbies.has(lobbyId)) {
+            const lobby = lobbies.get(lobbyId);
+            lobby.paragraph = await getRandomParagraph();
+            const gameState = {
+                players: Array.from(lobby.players).map(id => ({ id, progress: 0 })),
+                paragraph: lobby.paragraph
+            };
+            io.to(lobbyId).emit('gameStarted', gameState);
+        }
     });
 
     socket.on('typingProgress', (progress) => {
-        const player = players.get(socket.id);
-        if (player) {
-            player.progress = progress;
-            io.emit('playerProgress', { id: socket.id, progress });
+        const lobbyId = Array.from(socket.rooms).find(room => room !== socket.id);
+        if (lobbyId) {
+            io.to(lobbyId).emit('playerProgress', { id: socket.id, progress });
         }
     });
 
     socket.on('disconnect', () => {
-        players.delete(socket.id);
-        currentParagraphs.delete(socket.id);
-        io.emit('playerDisconnected', socket.id);
+        for (const [lobbyId, lobby] of lobbies) {
+            if (lobby.players.has(socket.id)) {
+                lobby.players.delete(socket.id);
+                io.to(lobbyId).emit('playerDisconnected', socket.id);
+                if (lobby.players.size === 0) {
+                    lobbies.delete(lobbyId);
+                }
+                break;
+            }
+        }
     });
 });
-
-async function startNewRound() {
-    for (let [id, player] of players) {
-        const paragraph = await getRandomParagraph();
-        currentParagraphs.set(id, paragraph);
-        player.progress = 0;
-        io.to(id).emit('newRound', { paragraph });
-    }
-    io.emit('updatePlayers', Array.from(players.values()));
-}
-
-setInterval(startNewRound, 60000); // New round every 60 seconds
-
-// Start the first round immediately
-startNewRound();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
