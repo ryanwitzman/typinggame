@@ -52,25 +52,4 @@ function createOrUpdateCar(playerId) {
     }
 }
 
-function setupEventListeners() {
-    window.socket.on('playerProgress', ({ id, progress }) => {
-        if (players.has(id)) {
-            players.get(id).progress = progress;
-            updateCarProgress(id, progress);
-        }
-    });
-
-    window.socket.on('playerDisconnected', (id) => {
-        players.delete(id);
-        // Remove car from scene
-    });
-
-    document.addEventListener('keydown', (event) => {
-        handleUserInput(event);
-        const progress = getProgress();
-        window.socket.emit('typingProgress', progress);
-        updateCarProgress(window.socket.id, progress);
-    });
-}
-
 export { players };
