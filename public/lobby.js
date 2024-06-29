@@ -18,12 +18,6 @@ export function showLobby(id) {
     updateLobbyDisplay();
     initChat();
     
-    // Add event listener for the 'C' key to change car color
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'c' || event.key === 'C') {
-            window.socket.emit('changeCarColor', lobbyId);
-        }
-    });
 }
 
 export function updateLobby(lobbyData) {
@@ -50,7 +44,6 @@ function updateLobbyDisplay() {
             ${players.map(player => `<li>${player}</li>`).join('')}
         </ul>
         <button id="start-game-btn" style="padding: 10px 20px; font-size: 16px; margin-top: 10px;">Start Game</button>
-        <p>Press 'C' to change car color</p>
         <div id="chat-container" style="margin-top: 20px;">
             <div id="chat-messages" style="height: 150px; overflow-y: auto; border: 1px solid white; padding: 10px; margin-bottom: 10px;"></div>
             <input type="text" id="chat-input" placeholder="Type your message..." style="width: 70%; padding: 5px;">

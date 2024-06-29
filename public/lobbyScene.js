@@ -1,6 +1,6 @@
 import { THREE } from './threeImport.js';
 import { createCar, updateCarPosition } from './car.js';
-import { createColorSelector, getSelectedColor } from './colorSelector.js';
+import { createColorSelector, getSelectedColor, onColorChange } from './colorSelector.js';
 
 let scene, camera, renderer;
 let car;
@@ -23,7 +23,17 @@ export function initLobbyScene() {
     addLighting();
     createPlayerCar();
 
-    createColorSelector(lobbyContainer);
+    const colorSelectorContainer = document.createElement('div');
+    colorSelectorContainer.id = 'color-selector-container';
+    colorSelectorContainer.style.position = 'absolute';
+    colorSelectorContainer.style.top = '10px';
+    colorSelectorContainer.style.right = '10px';
+    lobbyContainer.appendChild(colorSelectorContainer);
+
+    createColorSelector(colorSelectorContainer, (color) => {
+        updateCarColor(color);
+        window.socket.emit('changeCarColor', { lobbyId, color });
+    });
 
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onMouseDown, false);
@@ -67,6 +77,14 @@ function addLighting() {
 
 function createPlayerCar() {
     car = createCar(getSelectedColor());
+    car.scale.set(0.5, 0.5, 0.5);
+    car.position.set(0, 0.5, 0);
+    scene.add(car);
+}
+
+function updateCarColor(color) {
+    scene.remove(car);
+    car = createCar(color);
     car.scale.set(0.5, 0.5, 0.5);
     car.position.set(0, 0.5, 0);
     scene.add(car);

@@ -58,4 +58,33 @@ import { THREE } from './threeImport.js';
 
  export function getSelectedColor() {
      return colors[selectedColorIndex];
- }
+ }let selectedColor = 0x1a75ff;
+let onChangeCallback = null;
+
+export function createColorSelector(container, onChange) {
+    onChangeCallback = onChange;
+    const colors = [0x1a75ff, 0xff0000, 0x00ff00, 0xffff00, 0xff00ff, 0x00ffff];
+    
+    colors.forEach(color => {
+        const colorButton = document.createElement('button');
+        colorButton.style.width = '30px';
+        colorButton.style.height = '30px';
+        colorButton.style.backgroundColor = '#' + color.toString(16).padStart(6, '0');
+        colorButton.style.margin = '5px';
+        colorButton.style.border = 'none';
+        colorButton.style.cursor = 'pointer';
+        colorButton.onclick = () => {
+            selectedColor = color;
+            if (onChangeCallback) onChangeCallback(color);
+        };
+        container.appendChild(colorButton);
+    });
+}
+
+export function getSelectedColor() {
+    return selectedColor;
+}
+
+export function onColorChange(callback) {
+    onChangeCallback = callback;
+}
