@@ -11,24 +11,30 @@ const io = socketIo(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 const players = new Map();
-let currentWord = '';
-async function getRandomWord() {
+let currentParagraphs = new Map();
+
+async function getRandomParagraph(wordCount = 20) {
     try {
-        const response = await fetch('https://random-word-api.herokuapp.com/word');
+        const response = await fetch(`https://random-word-api.herokuapp.com/word?number=${wordCount}`);
         const words = await response.json();
-        return words[0];
+        return words.join(' ');
     } catch (error) {
-        console.error('Error fetching random word:', error);
-        return 'fallback'; // Return a fallback word in case of an error
+        console.error('Error fetching random words:', error);
+        return 'The quick brown fox jumps over the lazy dog.'; // Fallback sentence
     }
 }
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('New player connected');
 
+    const paragraph = await getRandomParagraph();
     players.set(socket.id, { id: socket.id, progress: 0 });
+    currentParagraphs.set(socket.id, paragraph);
 
-    socket.emit('gameState', { players: Array.from(players.values()), currentWord });
+    socket.emit('gameState', { 
+        players: Array.from(players.values()), 
+        paragraph: paragraph 
+    });
 
     socket.on('typingProgress', (progress) => {
         const player = players.get(socket.id);
@@ -40,17 +46,22 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         players.delete(socket.id);
+        currentParagraphs.delete(socket.id);
         io.emit('playerDisconnected', socket.id);
     });
 });
 
 async function startNewRound() {
-    currentWord = await getRandomWord();
-    players.forEach(player => player.progress = 0);
-    io.emit('newRound', { currentWord, players: Array.from(players.values()) });
+    for (let [id, player] of players) {
+        const paragraph = await getRandomParagraph();
+        currentParagraphs.set(id, paragraph);
+        player.progress = 0;
+        io.to(id).emit('newRound', { paragraph });
+    }
+    io.emit('updatePlayers', Array.from(players.values()));
 }
 
-setInterval(startNewRound, 30000); // New round every 30 seconds
+setInterval(startNewRound, 60000); // New round every 60 seconds
 
 // Start the first round immediately
 startNewRound();
