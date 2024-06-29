@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const fetch = require('node-fetch');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,10 +12,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const players = new Map();
 let currentWord = '';
-const words = ['javascript', 'threejs', 'websocket', 'multiplayer', 'typing', 'game'];
-
-function getRandomWord() {
-    return words[Math.floor(Math.random() * words.length)];
+async function getRandomWord() {
+    try {
+        const response = await fetch('https://random-word-api.herokuapp.com/word');
+        const words = await response.json();
+        return words[0];
+    } catch (error) {
+        console.error('Error fetching random word:', error);
+        return 'fallback'; // Return a fallback word in case of an error
+    }
 }
 
 io.on('connection', (socket) => {
@@ -38,13 +44,16 @@ io.on('connection', (socket) => {
     });
 });
 
-function startNewRound() {
-    currentWord = getRandomWord();
+async function startNewRound() {
+    currentWord = await getRandomWord();
     players.forEach(player => player.progress = 0);
     io.emit('newRound', { currentWord, players: Array.from(players.values()) });
 }
 
 setInterval(startNewRound, 30000); // New round every 30 seconds
+
+// Start the first round immediately
+startNewRound();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
