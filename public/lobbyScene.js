@@ -1,12 +1,11 @@
 import { THREE } from './threeImport.js';
 import { createCar, updateCarPosition } from './car.js';
+import { createColorSelector, getSelectedColor } from './colorSelector.js';
 
 let scene, camera, renderer;
 let car;
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
-const colors = [0x1a75ff, 0xff4d4d, 0x4dff4d, 0xffff4d, 0xff4dff, 0x4dffff];
-let currentColorIndex = 0;
 
 export function initLobbyScene() {
     scene = new THREE.Scene();
@@ -14,7 +13,8 @@ export function initLobbyScene() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('lobby-container').appendChild(renderer.domElement);
+    const lobbyContainer = document.getElementById('lobby-container');
+    lobbyContainer.appendChild(renderer.domElement);
 
     camera.position.set(0, 5, 10);
     camera.lookAt(0, 0, 0);
@@ -23,11 +23,12 @@ export function initLobbyScene() {
     addLighting();
     createPlayerCar();
 
+    createColorSelector(lobbyContainer);
+
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onMouseDown, false);
     document.addEventListener('mousemove', onMouseMove, false);
     document.addEventListener('mouseup', onMouseUp, false);
-    document.addEventListener('keydown', onKeyDown, false);
 
     animate();
 }
@@ -65,7 +66,7 @@ function addLighting() {
 }
 
 function createPlayerCar() {
-    car = createCar(colors[currentColorIndex]);
+    car = createCar(getSelectedColor());
     car.scale.set(0.5, 0.5, 0.5);
     car.position.set(0, 0.5, 0);
     scene.add(car);
@@ -108,17 +109,6 @@ function onMouseMove(event) {
 
 function onMouseUp() {
     isDragging = false;
-}
-
-function onKeyDown(event) {
-    if (event.key === 'c' || event.key === 'C') {
-        changeCarColor();
-    }
-}
-
-function changeCarColor() {
-    currentColorIndex = (currentColorIndex + 1) % colors.length;
-    car.children[0].material.color.setHex(colors[currentColorIndex]);
 }
 
 export function updatePlayerCars(players) {
