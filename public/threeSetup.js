@@ -84,6 +84,13 @@ export function animate() {
 }
 
 export function createPlayerCar(playerId) {
+    // Remove existing car if it exists
+    if (cars.has(playerId)) {
+        const existingCar = cars.get(playerId);
+        scene.remove(existingCar);
+        cars.delete(playerId);
+    }
+
     const carColor = Math.random() * 0xffffff;
     const car = createCar(carColor);
     car.scale.set(0.5, 0.5, 0.5); // Scale down the car to fit the scene better
@@ -107,9 +114,6 @@ export function updateCarProgress(playerId, progress) {
         }
     } else {
         console.log(`Car not found for player ${playerId}`);
-        // If the car doesn't exist, create it
-        createPlayerCar(playerId);
-        updateCarProgress(playerId, progress);
     }
 }
 
