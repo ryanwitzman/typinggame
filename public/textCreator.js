@@ -1,4 +1,4 @@
-import { THREE } from './threeImport.js';
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 
 export function createText(text) {
     const loader = new THREE.FontLoader();

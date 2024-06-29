@@ -1,4 +1,4 @@
-import { initMenu } from './menu.js';
+import { initMenu, showLobbyList } from './menu.js';
 import { initGame } from './game.js';
 
 const socket = io();
@@ -13,8 +13,8 @@ socket.on('lobbyCreated', (lobbyId) => {
     // Implement lobby waiting room
 });
 
-socket.on('lobbyList', (lobbies) => {
-    showLobbyList(lobbies);
+socket.on('lobbyList', async (lobbies) => {
+    await showLobbyList(lobbies);
 });
 
 socket.on('joinedLobby', (lobbyId) => {

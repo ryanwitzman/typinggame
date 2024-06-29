@@ -1,5 +1,5 @@
 import { createText } from './textCreator.js';
-import { THREE } from './threeImport.js';
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 
 let scene, camera, renderer, raycaster, mouse;
 let menuItems = [];
@@ -34,6 +34,8 @@ async function createMenuItems() {
     joinLobbyText.position.set(0, -1, 0);
     scene.add(joinLobbyText);
     menuItems.push({ mesh: joinLobbyText, action: 'joinLobby' });
+
+    return Promise.resolve();
 }
 
 function animate() {
@@ -86,7 +88,7 @@ function handleMenuAction(action) {
     }
 }
 
-export function showLobbyList(lobbies) {
+export async function showLobbyList(lobbies) {
     // Clear existing menu items
     for (let item of menuItems) {
         scene.remove(item.mesh);
@@ -94,15 +96,16 @@ export function showLobbyList(lobbies) {
     menuItems = [];
 
     // Create lobby list
-    lobbies.forEach((lobby, index) => {
-        const lobbyText = createText(`Join Lobby ${lobby.id}`);
-        lobbyText.position.set(0, 2 - index, 0);
+    for (let i = 0; i < lobbies.length; i++) {
+        const lobby = lobbies[i];
+        const lobbyText = await createText(`Join Lobby ${lobby.id}`);
+        lobbyText.position.set(0, 2 - i, 0);
         scene.add(lobbyText);
         menuItems.push({ mesh: lobbyText, action: 'joinLobby', lobbyId: lobby.id });
-    });
+    }
 
     // Add back button
-    const backText = createText('Back');
+    const backText = await createText('Back');
     backText.position.set(0, -3, 0);
     scene.add(backText);
     menuItems.push({ mesh: backText, action: 'back' });
