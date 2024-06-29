@@ -40,7 +40,7 @@ socket.on('gameStarted', (gameState) => {
 });
 
 export function startGame() {
-    socket.emit('startGame');
+    socket.emit('startGame', lobbyId);
 }
 
 export function leaveLobby() {
