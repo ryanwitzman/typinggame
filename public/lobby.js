@@ -64,6 +64,7 @@ function updateLobbyDisplay() {
 
     document.getElementById('start-game-btn').addEventListener('click', () => {
         window.socket.emit('startGame', lobbyId);
+        hideLobby();
     });
 }
 

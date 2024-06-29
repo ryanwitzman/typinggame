@@ -64,6 +64,7 @@ io.on('connection', (socket) => {
                 paragraph: lobby.paragraph
             };
             io.to(lobbyId).emit('gameStarted', gameState);
+            lobby.gameStarted = true;
         }
     });
 
