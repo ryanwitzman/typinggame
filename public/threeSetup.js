@@ -45,6 +45,14 @@ function createTrack() {
     grass.rotation.x = -Math.PI / 2;
     grass.position.y = -0.1;
     scene.add(grass);
+
+    // Add finish line
+    const finishLineGeometry = new THREE.PlaneGeometry(1, 20);
+    const finishLineMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const finishLine = new THREE.Mesh(finishLineGeometry, finishLineMaterial);
+    finishLine.rotation.x = -Math.PI / 2;
+    finishLine.position.set(50, 0.01, 0); // Position at the end of the track
+    scene.add(finishLine);
 }
 
 function addLighting() {
@@ -79,7 +87,7 @@ export function updateCarProgress(playerId, progress) {
     const car = cars.get(playerId);
     if (car) {
         car.progress = progress;
-        const trackLength = 90; // Length of the track
+        const trackLength = 95; // Length of the track (from -45 to 50)
         const startX = -45; // Starting X position
         car.position.x = startX + (progress / 100) * trackLength;
         console.log(`Car updated for player ${playerId}, progress: ${progress}`);
