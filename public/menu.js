@@ -1,4 +1,5 @@
 import { THREE } from './threeImport.js';
+import { createCar } from './car.js';
 let scene, camera, renderer, car;
 
 export function initMenu() {
