@@ -103,10 +103,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('getLeaderboard', () => {
-        const leaderboardData = Array.from(leaderboard.values())
-            .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
-            .slice(0, 10);  // Top 10 players
-        socket.emit('leaderboardData', leaderboardData);
+        socket.emit('leaderboardData', leaderboards);
     });
 
     socket.on('disconnect', () => {
