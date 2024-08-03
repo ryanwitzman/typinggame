@@ -26,6 +26,11 @@ export function initMenu() {
     createMenuHTML();
 }
 
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+
 function createMenuHTML() {
     const uiContainer = document.createElement('div');
     uiContainer.id = 'menu-ui';
