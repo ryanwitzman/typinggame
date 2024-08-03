@@ -7,7 +7,15 @@ export function initMenu() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);  // Smaller render size
-    document.getElementById('car-container').appendChild(renderer.domElement);
+    
+    // Create car-container if it doesn't exist
+    let carContainer = document.getElementById('car-container');
+    if (!carContainer) {
+        carContainer = document.createElement('div');
+        carContainer.id = 'car-container';
+        document.body.appendChild(carContainer);
+    }
+    carContainer.appendChild(renderer.domElement);
 
     camera.position.set(0, 3, 5);
     camera.lookAt(0, 0, 0);
