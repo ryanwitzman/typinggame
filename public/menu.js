@@ -1,5 +1,4 @@
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
-
+import { THREE } from './threeImport.js';
 let scene, camera, renderer, car;
 let createLobbyButton, joinLobbyButton;
 
@@ -23,7 +22,7 @@ export function initMenu() {
 
     // Add background
     const loader = new THREE.TextureLoader();
-    const bgTexture = loader.load('path/to/background_image.jpg');
+    const bgTexture = loader.load('background_texture.jpg');
     scene.background = bgTexture;
 
     // Add car
