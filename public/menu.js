@@ -114,17 +114,6 @@ function createPlayerCar() {
     scene.add(car);
 }
 
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);
-}
-
 window.handleMenuAction = function(action) {
     switch (action) {
         case 'createLobby':
@@ -189,18 +178,4 @@ export function showMenu() {
     document.getElementById('lobby-container').style.display = 'none';
     document.getElementById('game-container').style.display = 'none';
     createMenuHTML();
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    if (car) {
-        car.rotation.y += 0.01;
-    }
-    renderer.render(scene, camera);
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
 }
