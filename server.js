@@ -127,28 +127,50 @@ function getRandomColor() {
     return '#' + Math.floor(Math.random()*16777215).toString(16);
 }
 
-function updateLeaderboard(playerId, gameData) {
-    if (!leaderboard.has(playerId)) {
-        leaderboard.set(playerId, {
-            name: `Player${playerId.substr(0, 4)}`,
-            gamesPlayed: 0,
-            topSpeed: 0,
-            dailyGames: 0,
-            lastPlayedDate: null
-        });
-    }
+const leaderboards = {
+    allTimeRaces: [],
+    allTimeSpeed: [],
+    dailyRaces: [],
+    dailySpeed: []
+};
 
-    const playerData = leaderboard.get(playerId);
-    playerData.gamesPlayed++;
-    playerData.topSpeed = Math.max(playerData.topSpeed, gameData.speed);
+function updateLeaderboard(playerId, gameData) {
+    const player = players.get(playerId);
+    if (!player) return;
 
     const today = new Date().toDateString();
-    if (playerData.lastPlayedDate !== today) {
-        playerData.dailyGames = 1;
-        playerData.lastPlayedDate = today;
-    } else {
-        playerData.dailyGames++;
-    }
+    const entry = {
+        username: player.username,
+        displayName: player.displayName,
+        dateAchieved: new Date()
+    };
 
-    leaderboard.set(playerId, playerData);
+    // Update all-time races
+    updateLeaderboardEntry(leaderboards.allTimeRaces, playerId, entry, 'gamesPlayed', gameData.gamesPlayed);
+
+    // Update all-time speed
+    updateLeaderboardEntry(leaderboards.allTimeSpeed, playerId, entry, 'topSpeed', gameData.speed);
+
+    // Update daily races
+    updateDailyLeaderboard(leaderboards.dailyRaces, playerId, entry, 'dailyGames', 1);
+
+    // Update daily speed
+    updateDailyLeaderboard(leaderboards.dailySpeed, playerId, entry, 'dailyTopSpeed', gameData.speed);
+}
+
+function updateLeaderboardEntry(leaderboard, playerId, entry, key, value) {
+    const index = leaderboard.findIndex(e => e.username === entry.username);
+    if (index === -1) {
+        leaderboard.push({ ...entry, [key]: value });
+    } else if (leaderboard[index][key] < value) {
+        leaderboard[index] = { ...entry, [key]: value };
+    }
+    leaderboard.sort((a, b) => b[key] - a[key]);
+    leaderboard.splice(10); // Keep only top 10
+}
+
+function updateDailyLeaderboard(leaderboard, playerId, entry, key, value) {
+    const today = new Date().toDateString();
+    leaderboard = leaderboard.filter(e => e.dateAchieved.toDateString() === today);
+    updateLeaderboardEntry(leaderboard, playerId, entry, key, value);
 }
