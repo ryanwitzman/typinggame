@@ -1,14 +1,13 @@
 import { THREE } from './threeImport.js';
 let scene, camera, renderer, car;
-let createLobbyButton, joinLobbyButton;
 
 export function initMenu() {
     console.log('Initializing menu');
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('menu-container').appendChild(renderer.domElement);
+    renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);  // Smaller render size
+    document.getElementById('car-container').appendChild(renderer.domElement);
 
     camera.position.set(0, 3, 5);
     camera.lookAt(0, 0, 0);
@@ -19,11 +18,6 @@ export function initMenu() {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
-
-    // Add background
-    const loader = new THREE.TextureLoader();
-    const bgTexture = loader.load('background_texture.jpg');
-    scene.background = bgTexture;
 
     // Add car
     const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
@@ -39,120 +33,87 @@ export function initMenu() {
     ground.position.y = -0.25;
     scene.add(ground);
 
-    // Add buttons
-    createMenuButtons();
-
     animate();
     window.addEventListener('resize', onWindowResize, false);
+
+    createMenuHTML();
 }
 
-function createMenuButtons() {
-    const buttonStyle = `
-        position: absolute;
-        padding: 10px 20px;
-        font-size: 18px;
-        color: white;
-        background-color: #4CAF50;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
+function createMenuHTML() {
+    const menuContainer = document.getElementById('menu-container');
+    menuContainer.innerHTML = `
+        <h1>Racing Game</h1>
+        <button onclick="handleMenuAction('createLobby')">Create Lobby</button>
+        <button onclick="handleMenuAction('joinPublicLobby')">Join Public Lobby</button>
+        <div>
+            <input type="text" id="privateLobbyCode" placeholder="Enter private lobby code">
+            <button onclick="handleMenuAction('joinPrivateLobby')">Join Private Lobby</button>
+        </div>
+        <button onclick="handleMenuAction('showLeaderboard')">Leaderboard</button>
     `;
-
-    createLobbyButton = document.createElement('button');
-    createLobbyButton.textContent = 'Create Lobby';
-    createLobbyButton.style.cssText = buttonStyle;
-    createLobbyButton.style.left = '20px';
-    createLobbyButton.style.top = '20px';
-    createLobbyButton.addEventListener('click', () => handleMenuAction('createLobby'));
-    createLobbyButton.addEventListener('mouseover', () => createLobbyButton.style.backgroundColor = '#45a049');
-    createLobbyButton.addEventListener('mouseout', () => createLobbyButton.style.backgroundColor = '#4CAF50');
-    document.body.appendChild(createLobbyButton);
-
-    joinLobbyButton = document.createElement('button');
-    joinLobbyButton.textContent = 'Join Lobby';
-    joinLobbyButton.style.cssText = buttonStyle;
-    joinLobbyButton.style.left = '20px';
-    joinLobbyButton.style.top = '80px';
-    joinLobbyButton.addEventListener('click', () => handleMenuAction('joinLobby'));
-    joinLobbyButton.addEventListener('mouseover', () => joinLobbyButton.style.backgroundColor = '#45a049');
-    joinLobbyButton.addEventListener('mouseout', () => joinLobbyButton.style.backgroundColor = '#4CAF50');
-    document.body.appendChild(joinLobbyButton);
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Rotate the car
-    car.rotation.y += 0.01;
-    
-    // Make the car bounce
-    car.position.y = Math.sin(Date.now() * 0.003) * 0.1 + 0.5;
-
     renderer.render(scene, camera);
 }
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);
 }
 
-function handleMenuAction(action, lobbyId) {
+window.handleMenuAction = function(action) {
     switch (action) {
         case 'createLobby':
             window.socket.emit('createLobby');
             break;
-        case 'joinLobby':
+        case 'joinPublicLobby':
             window.socket.emit('getLobbyList');
+            break;
+        case 'joinPrivateLobby':
+            const code = document.getElementById('privateLobbyCode').value;
+            window.socket.emit('joinLobby', code);
+            break;
+        case 'showLeaderboard':
+            showLeaderboard();
             break;
     }
 }
 
 export function showLobbyList(lobbies) {
-    // Remove existing buttons
-    document.body.removeChild(createLobbyButton);
-    document.body.removeChild(joinLobbyButton);
-
-    // Create lobby list
-    const lobbyList = document.createElement('div');
-    lobbyList.style.position = 'absolute';
-    lobbyList.style.left = '20px';
-    lobbyList.style.top = '20px';
-    lobbyList.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-    lobbyList.style.padding = '10px';
-
+    const menuContainer = document.getElementById('menu-container');
+    let lobbyListHTML = '<h2>Available Lobbies</h2><ul>';
     lobbies.forEach(lobby => {
-        const lobbyButton = document.createElement('button');
-        lobbyButton.textContent = `Join Lobby ${lobby}`;
-        lobbyButton.addEventListener('click', () => {
-            window.socket.emit('joinLobby', lobby);
-            document.body.removeChild(lobbyList);
-        });
-        lobbyList.appendChild(lobbyButton);
-        lobbyList.appendChild(document.createElement('br'));
+        lobbyListHTML += `<li><button onclick="window.socket.emit('joinLobby', '${lobby}')">Join Lobby ${lobby}</button></li>`;
     });
+    lobbyListHTML += '</ul><button onclick="createMenuHTML()">Back</button>';
+    menuContainer.innerHTML = lobbyListHTML;
+}
 
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back';
-    backButton.addEventListener('click', () => {
-        document.body.removeChild(lobbyList);
-        createMenuButtons();
+function showLeaderboard() {
+    window.socket.emit('getLeaderboard');
+}
+
+export function displayLeaderboard(leaderboardData) {
+    const menuContainer = document.getElementById('menu-container');
+    let leaderboardHTML = '<h2>Leaderboard</h2>';
+    leaderboardHTML += '<table><tr><th>Player</th><th>Games Played</th><th>Top Speed</th><th>Daily Games</th></tr>';
+    leaderboardData.forEach(player => {
+        leaderboardHTML += `<tr><td>${player.name}</td><td>${player.gamesPlayed}</td><td>${player.topSpeed}</td><td>${player.dailyGames}</td></tr>`;
     });
-    lobbyList.appendChild(backButton);
-
-    document.body.appendChild(lobbyList);
+    leaderboardHTML += '</table><button onclick="createMenuHTML()">Back</button>';
+    menuContainer.innerHTML = leaderboardHTML;
 }
 
 export function hideMenu() {
     document.getElementById('menu-container').style.display = 'none';
-    if (createLobbyButton) document.body.removeChild(createLobbyButton);
-    if (joinLobbyButton) document.body.removeChild(joinLobbyButton);
 }
 
 export function showMenu() {
     document.getElementById('menu-container').style.display = 'block';
     document.getElementById('lobby-container').style.display = 'none';
     document.getElementById('game-container').style.display = 'none';
-    createMenuButtons();
+    createMenuHTML();
 }
