@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Racing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Account</h1>
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="signup-form">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Username">
+            <input type="password" id="signup-password" placeholder="Password">
+            <button onclick="signup()">Sign Up</button>
+        </div>
+        <div id="user-info" style="display: none;">
+            <h2>Welcome, <span id="user-displayname"></span></h2>
+            <input type="text" id="new-displayname" placeholder="New Display Name">
+            <button onclick="updateDisplayName()">Update Display Name</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+        <div id="error-message" class="error"></div>
+        <button onclick="window.location.href='/'">Back to Menu</button>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let username = localStorage.getItem('username');
+        let displayName = localStorage.getItem('displayName');
+
+        if (token && username) {
+            showUserInfo();
+        }
+
+        function showUserInfo() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('user-info').style.display = 'block';
+            document.getElementById('user-displayname').textContent = displayName || username;
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('displayName', data.displayName);
+                    showUserInfo();
+                } else {
+                    document.getElementById('error-message').textContent = data.error;
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
+            }
+        }
+
+        async function signup() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            try {
+                const response = await fetch('/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('error-message').textContent = 'Account created successfully. Please log in.';
+                } else {
+                    document.getElementById('error-message').textContent = data.error;
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
+            }
+        }
+
+        async function updateDisplayName() {
+            const newDisplayName = document.getElementById('new-displayname').value;
+            try {
+                const response = await fetch('/auth/update-display-name', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ newDisplayName })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('displayName', data.displayName);
+                    document.getElementById('user-displayname').textContent = data.displayName;
+                    document.getElementById('error-message').textContent = 'Display name updated successfully.';
+                } else {
+                    document.getElementById('error-message').textContent = data.error;
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('displayName');
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('signup-form').style.display = 'block';
+            document.getElementById('user-info').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

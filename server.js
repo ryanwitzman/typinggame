@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const { initChatServer } = require('./chat_server');
+const authRoutes = require('./auth');
+const { updateLeaderboard, getLeaderboard } = require('./db');
 
 let fetch;
 
@@ -16,12 +18,13 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use('/auth', authRoutes);
 
 initChatServer(io);
 
 const lobbies = new Map();
 const players = new Map();
-const leaderboard = new Map();
 
 const paragraphs = [
     "The quick brown fox jumps over the lazy dog.",
@@ -98,11 +101,23 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('gameFinished', (data) => {
-        updateLeaderboard(socket.id, data);
+    socket.on('gameFinished', async (data) => {
+        const player = players.get(socket.id);
+        if (player) {
+            await updateLeaderboard(player.id, 'allTimeRaces', data.gamesPlayed);
+            await updateLeaderboard(player.id, 'allTimeSpeed', data.speed);
+            await updateLeaderboard(player.id, 'dailyRaces', 1);
+            await updateLeaderboard(player.id, 'dailySpeed', data.speed);
+        }
     });
 
-    socket.on('getLeaderboard', () => {
+    socket.on('getLeaderboard', async () => {
+        const leaderboards = {
+            allTimeRaces: await getLeaderboard('allTimeRaces'),
+            allTimeSpeed: await getLeaderboard('allTimeSpeed'),
+            dailyRaces: await getLeaderboard('dailyRaces'),
+            dailySpeed: await getLeaderboard('dailySpeed')
+        };
         socket.emit('leaderboardData', leaderboards);
     });
 
@@ -125,52 +140,4 @@ server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 function getRandomColor() {
     return '#' + Math.floor(Math.random()*16777215).toString(16);
-}
-
-const leaderboards = {
-    allTimeRaces: [],
-    allTimeSpeed: [],
-    dailyRaces: [],
-    dailySpeed: []
-};
-
-function updateLeaderboard(playerId, gameData) {
-    const player = players.get(playerId);
-    if (!player) return;
-
-    const today = new Date().toDateString();
-    const entry = {
-        username: player.username,
-        displayName: player.displayName,
-        dateAchieved: new Date()
-    };
-
-    // Update all-time races
-    updateLeaderboardEntry(leaderboards.allTimeRaces, playerId, entry, 'gamesPlayed', gameData.gamesPlayed);
-
-    // Update all-time speed
-    updateLeaderboardEntry(leaderboards.allTimeSpeed, playerId, entry, 'topSpeed', gameData.speed);
-
-    // Update daily races
-    updateDailyLeaderboard(leaderboards.dailyRaces, playerId, entry, 'dailyGames', 1);
-
-    // Update daily speed
-    updateDailyLeaderboard(leaderboards.dailySpeed, playerId, entry, 'dailyTopSpeed', gameData.speed);
-}
-
-function updateLeaderboardEntry(leaderboard, playerId, entry, key, value) {
-    const index = leaderboard.findIndex(e => e.username === entry.username);
-    if (index === -1) {
-        leaderboard.push({ ...entry, [key]: value });
-    } else if (leaderboard[index][key] < value) {
-        leaderboard[index] = { ...entry, [key]: value };
-    }
-    leaderboard.sort((a, b) => b[key] - a[key]);
-    leaderboard.splice(10); // Keep only top 10
-}
-
-function updateDailyLeaderboard(leaderboard, playerId, entry, key, value) {
-    const today = new Date().toDateString();
-    leaderboard = leaderboard.filter(e => e.dateAchieved.toDateString() === today);
-    updateLeaderboardEntry(leaderboard, playerId, entry, key, value);
 }

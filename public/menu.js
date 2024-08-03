@@ -60,6 +60,7 @@ function createMenuHTML() {
             <button class="menu-button" onclick="handleMenuAction('joinPrivateLobby')">Join Private Lobby</button>
         </div>
         <button class="menu-button" onclick="handleMenuAction('showLeaderboard')">Leaderboard</button>
+        <button class="menu-button" onclick="handleMenuAction('showAccount')">Account</button>
     `;
 
     const style = document.createElement('style');
@@ -141,6 +142,9 @@ window.handleMenuAction = function(action) {
         case 'showLeaderboard':
             showLeaderboard();
             break;
+        case 'showAccount':
+            showAccount();
+            break;
     }
 }
 
@@ -156,6 +160,10 @@ export function showLobbyList(lobbies) {
 
 function showLeaderboard() {
     window.location.href = '/leaderboard.html';
+}
+
+function showAccount() {
+    window.location.href = '/account.html';
 }
 
 export function hideMenu() {
