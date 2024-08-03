@@ -106,6 +106,33 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 function getRandomColor() {
     return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
+
+function updateLeaderboard(playerId, gameData) {
+    if (!leaderboard.has(playerId)) {
+        leaderboard.set(playerId, {
+            name: `Player${playerId.substr(0, 4)}`,
+            gamesPlayed: 0,
+            topSpeed: 0,
+            dailyGames: 0,
+            lastPlayedDate: null
+        });
+    }
+
+    const playerData = leaderboard.get(playerId);
+    playerData.gamesPlayed++;
+    playerData.topSpeed = Math.max(playerData.topSpeed, gameData.speed);
+
+    const today = new Date().toDateString();
+    if (playerData.lastPlayedDate !== today) {
+        playerData.dailyGames = 1;
+        playerData.lastPlayedDate = today;
+    } else {
+        playerData.dailyGames++;
+    }
+
+    leaderboard.set(playerId, playerData);
 }
