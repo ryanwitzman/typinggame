@@ -44,6 +44,7 @@ function updateLobbyDisplay() {
             ${players.map(player => `<li>${player}</li>`).join('')}
         </ul>
         <button id="start-game-btn" style="padding: 10px 20px; font-size: 16px; margin-top: 10px;">Start Game</button>
+        <button id="return-to-menu-btn" style="padding: 10px 20px; font-size: 16px; margin-top: 10px; margin-left: 10px;">Return to Menu</button>
         <div id="chat-container" style="margin-top: 20px;">
             <div id="chat-messages" style="height: 150px; overflow-y: auto; border: 1px solid white; padding: 10px; margin-bottom: 10px;"></div>
             <input type="text" id="chat-input" placeholder="Type your message..." style="width: 70%; padding: 5px;">
@@ -59,6 +60,11 @@ function updateLobbyDisplay() {
 
     document.getElementById('start-game-btn').addEventListener('click', () => {
         startGame(lobbyId);
+    });
+
+    document.getElementById('return-to-menu-btn').addEventListener('click', () => {
+        hideLobby();
+        showMenu();
     });
 }
 

@@ -152,5 +152,7 @@ export function hideMenu() {
 
 export function showMenu() {
     document.getElementById('menu-container').style.display = 'block';
+    document.getElementById('lobby-container').style.display = 'none';
+    document.getElementById('game-container').style.display = 'none';
     createMenuButtons();
 }

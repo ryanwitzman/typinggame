@@ -24,6 +24,32 @@ export function initGame(gameState, socket) {
     document.getElementById('menu-container').style.display = 'none';
     document.getElementById('lobby-container').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
+
+    // Add return to lobby button
+    const returnToLobbyBtn = document.createElement('button');
+    returnToLobbyBtn.textContent = 'Return to Lobby';
+    returnToLobbyBtn.style.position = 'absolute';
+    returnToLobbyBtn.style.top = '10px';
+    returnToLobbyBtn.style.right = '10px';
+    returnToLobbyBtn.style.padding = '10px 20px';
+    returnToLobbyBtn.style.fontSize = '16px';
+    returnToLobbyBtn.addEventListener('click', returnToLobby);
+    document.getElementById('game-container').appendChild(returnToLobbyBtn);
+}
+
+function returnToLobby() {
+    // Hide game container, show lobby container
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('lobby-container').style.display = 'block';
+
+    // Clean up game resources
+    // (You might need to implement these functions)
+    disposeThreeJS();
+    disposeUI();
+    disposeCutScene();
+
+    // Reinitialize lobby
+    showLobby(lobbyId);
 }
 
 function setupEventListeners(socket) {
