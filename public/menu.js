@@ -155,30 +155,7 @@ export function showLobbyList(lobbies) {
 }
 
 function showLeaderboard() {
-    window.socket.emit('getLeaderboard');
-}
-
-export function displayLeaderboard(leaderboardData) {
-    const uiContainer = document.getElementById('menu-ui');
-    let leaderboardHTML = '<h2 style="margin-bottom: 20px;">Leaderboard</h2>';
-    leaderboardHTML += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;"><tr><th>Player</th><th>Games Played</th><th>Top Speed</th><th>Daily Games</th></tr>';
-    leaderboardData.forEach(player => {
-        leaderboardHTML += `<tr><td>${player.name}</td><td>${player.gamesPlayed}</td><td>${player.topSpeed}</td><td>${player.dailyGames}</td></tr>`;
-    });
-    leaderboardHTML += '</table><button class="menu-button" onclick="createMenuHTML()">Back</button>';
-    uiContainer.innerHTML = leaderboardHTML;
-
-    const style = document.createElement('style');
-    style.textContent = `
-        #menu-ui table {
-            color: white;
-        }
-        #menu-ui th, #menu-ui td {
-            padding: 10px;
-            border: 1px solid white;
-        }
-    `;
-    document.head.appendChild(style);
+    window.location.href = '/leaderboard.html';
 }
 
 export function hideMenu() {
