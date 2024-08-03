@@ -2,8 +2,14 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
-const fetch = require('node-fetch');
 const { initChatServer } = require('./chat_server');
+
+let fetch;
+
+(async () => {
+    const nodeFetch = await import('node-fetch');
+    fetch = nodeFetch.default;
+})();
 
 const app = express();
 const server = http.createServer(app);
