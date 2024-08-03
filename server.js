@@ -21,6 +21,7 @@ initChatServer(io);
 
 const lobbies = new Map();
 const players = new Map();
+const leaderboard = new Map();
 
 const paragraphs = [
     "The quick brown fox jumps over the lazy dog.",
@@ -44,9 +45,16 @@ io.on('connection', (socket) => {
 
     socket.on('createLobby', () => {
         const lobbyId = Math.random().toString(36).substring(2, 8);
-        lobbies.set(lobbyId, { players: new Map(), paragraph: null });
+        lobbies.set(lobbyId, { players: new Map(), paragraph: null, isPublic: false });
         socket.join(lobbyId);
         socket.emit('lobbyCreated', lobbyId);
+    });
+
+    socket.on('getLobbyList', () => {
+        const publicLobbies = Array.from(lobbies.entries())
+            .filter(([_, lobby]) => lobby.isPublic)
+            .map(([id, _]) => id);
+        socket.emit('lobbyList', publicLobbies);
     });
 
     socket.on('joinLobby', (lobbyId) => {
@@ -88,6 +96,17 @@ io.on('connection', (socket) => {
         if (lobbyId) {
             io.to(lobbyId).emit('playerProgress', { id: socket.id, progress });
         }
+    });
+
+    socket.on('gameFinished', (data) => {
+        updateLeaderboard(socket.id, data);
+    });
+
+    socket.on('getLeaderboard', () => {
+        const leaderboardData = Array.from(leaderboard.values())
+            .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
+            .slice(0, 10);  // Top 10 players
+        socket.emit('leaderboardData', leaderboardData);
     });
 
     socket.on('disconnect', () => {
